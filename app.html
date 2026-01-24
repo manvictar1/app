@@ -1234,13 +1234,13 @@
                         <label for="backup-data">Sauvegarde des données</label>
                         <div class="buttons">
                             <button type="button" class="btn btn-info" id="backup-btn">
-                                <i class="fas fa-download"></i> Sauvegarder
+                                <i class="fas fa-download"></i> Sauvegarder (JSON)
                             </button>
                             <button type="button" class="btn btn-warning" id="restore-btn">
-                                <i class="fas fa-upload"></i> Restaurer
+                                <i class="fas fa-upload"></i> Restaurer (JSON)
                             </button>
                         </div>
-                        <small>Sauvegardez toutes vos données (élèves, classes, présences) dans un fichier.</small>
+                        <small>Sauvegardez toutes vos données (élèves, classes, présences) dans un fichier JSON.</small>
                     </div>
                     
                     <div class="form-group">
@@ -1849,27 +1849,51 @@
             updateAttendanceSummary();
         }
         
-        // Définir le statut de présence d'un élève
+        // Définir le statut de présence d'un élève - FONCTION CORRIGÉE
         function setAttendance(studentId, status) {
+            console.log("Définir présence:", studentId, status); // Debug
+            
             const dateInput = document.getElementById('attendance-date');
             const selectedDate = dateInput.value;
             
             const statusElement = document.getElementById(`status-${studentId}-${currentPeriod}`);
+            console.log("Élément de statut:", statusElement); // Debug
+            
             if (statusElement) {
-                statusElement.className = `attendance-status status-${status}`;
-                statusElement.textContent = status === 'present' ? 'Présent' : (status === 'absent' ? 'Absent' : 'En retard');
+                // Supprimer toutes les classes de statut
+                statusElement.classList.remove('status-present', 'status-absent', 'status-late');
+                // Ajouter la nouvelle classe
+                statusElement.classList.add(`status-${status}`);
                 
+                // Mettre à jour le texte
+                if (status === 'present') {
+                    statusElement.textContent = 'Présent';
+                } else if (status === 'absent') {
+                    statusElement.textContent = 'Absent';
+                } else if (status === 'late') {
+                    statusElement.textContent = 'En retard';
+                }
+                
+                // Gérer le champ de retard
                 const lateInput = document.getElementById(`late-${studentId}-${currentPeriod}`);
+                console.log("Champ retard:", lateInput); // Debug
+                
                 if (lateInput) {
                     if (status === 'late') {
                         lateInput.disabled = false;
+                        // Si la valeur est 0, mettre une valeur par défaut
+                        if (!lateInput.value || lateInput.value === '0') {
+                            lateInput.value = '15'; // 15 minutes par défaut
+                        }
                     } else {
                         lateInput.disabled = true;
-                        lateInput.value = 0;
+                        lateInput.value = '0';
                     }
                 }
                 
                 updateAttendanceSummary();
+            } else {
+                console.error("Élément de statut non trouvé pour:", studentId, currentPeriod);
             }
         }
         
@@ -1885,12 +1909,13 @@
             students.forEach(student => {
                 const statusElement = document.getElementById(`status-${student.id}-${currentPeriod}`);
                 if (statusElement) {
-                    const status = statusElement.classList.contains('status-present') ? 'present' : 
-                                  (statusElement.classList.contains('status-absent') ? 'absent' : 'late');
-                    
-                    if (status === 'present') presentCount++;
-                    if (status === 'absent') absentCount++;
-                    if (status === 'late') lateCount++;
+                    if (statusElement.classList.contains('status-present')) {
+                        presentCount++;
+                    } else if (statusElement.classList.contains('status-absent')) {
+                        absentCount++;
+                    } else if (statusElement.classList.contains('status-late')) {
+                        lateCount++;
+                    }
                 }
             });
             
@@ -1914,15 +1939,23 @@
                 return;
             }
             
+            // Supprimer les anciens enregistrements pour cette date et période
             attendanceRecords = attendanceRecords.filter(record => 
                 !(record.date === selectedDate && record.period === currentPeriod)
             );
             
+            // Ajouter les nouveaux enregistrements
             students.forEach(student => {
                 const statusElement = document.getElementById(`status-${student.id}-${currentPeriod}`);
                 if (statusElement) {
-                    const status = statusElement.classList.contains('status-present') ? 'present' : 
-                                  (statusElement.classList.contains('status-absent') ? 'absent' : 'late');
+                    let status = '';
+                    if (statusElement.classList.contains('status-present')) {
+                        status = 'present';
+                    } else if (statusElement.classList.contains('status-absent')) {
+                        status = 'absent';
+                    } else if (statusElement.classList.contains('status-late')) {
+                        status = 'late';
+                    }
                     
                     const lateMinutes = status === 'late' ? 
                         parseInt(document.getElementById(`late-${student.id}-${currentPeriod}`).value) || 0 : 0;
@@ -2274,6 +2307,282 @@
                 alertElement.style.display = 'none';
             }, 5000);
         }
+        
+        // === FONCTIONS POUR L'IMPORT CSV ===
+        
+        // Gestion de l'import CSV
+        document.getElementById('file-upload-area').addEventListener('click', function() {
+            document.getElementById('csv-file').click();
+        });
+        
+        document.getElementById('csv-file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    csvData = [];
+                    
+                    // Nettoyer et parser les lignes
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (line) {
+                            const parts = line.split(',');
+                            if (parts.length >= 3) {
+                                const firstName = parts[0].trim();
+                                const lastName = parts[1].trim();
+                                const className = parts[2].trim();
+                                
+                                if (firstName && lastName && className) {
+                                    csvData.push({
+                                        firstName,
+                                        lastName,
+                                        className
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (csvData.length === 0) {
+                        showAlert('Aucune donnée valide trouvée dans le fichier CSV', 'error');
+                        return;
+                    }
+                    
+                    // Afficher l'aperçu
+                    displayCSVPreview();
+                    document.getElementById('preview-section').style.display = 'block';
+                    
+                } catch (error) {
+                    showAlert('Erreur lors de la lecture du fichier CSV: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        // Afficher l'aperçu CSV
+        function displayCSVPreview() {
+            const previewBody = document.getElementById('preview-body');
+            previewBody.innerHTML = '';
+            
+            csvData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.firstName}</td>
+                    <td>${item.lastName}</td>
+                    <td>${item.className}</td>
+                `;
+                previewBody.appendChild(row);
+            });
+        }
+        
+        // Importer les données CSV
+        document.getElementById('import-btn').addEventListener('click', function() {
+            if (csvData.length === 0) {
+                showAlert('Aucune donnée à importer', 'error');
+                return;
+            }
+            
+            let importedCount = 0;
+            let errors = [];
+            
+            csvData.forEach(item => {
+                // Vérifier si la classe existe
+                let classId = null;
+                const existingClass = classes.find(cls => cls.name === item.className);
+                
+                if (existingClass) {
+                    classId = existingClass.id;
+                } else {
+                    // Créer la classe si elle n'existe pas
+                    const newClass = {
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                        name: item.className,
+                        description: ''
+                    };
+                    classes.push(newClass);
+                    classId = newClass.id;
+                }
+                
+                // Vérifier si l'élève existe déjà
+                const existingStudent = students.find(student => 
+                    student.firstName.toLowerCase() === item.firstName.toLowerCase() && 
+                    student.lastName.toLowerCase() === item.lastName.toLowerCase() &&
+                    student.class === classId
+                );
+                
+                if (!existingStudent) {
+                    const newStudent = {
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                        firstName: item.firstName,
+                        lastName: item.lastName,
+                        class: classId
+                    };
+                    students.push(newStudent);
+                    importedCount++;
+                } else {
+                    errors.push(`${item.firstName} ${item.lastName} (déjà existant)`);
+                }
+            });
+            
+            // Sauvegarder les données
+            localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('classes', JSON.stringify(classes));
+            
+            // Réinitialiser l'interface
+            document.getElementById('preview-section').style.display = 'none';
+            document.getElementById('csv-file').value = '';
+            csvData = [];
+            
+            // Mettre à jour l'affichage
+            updateStats();
+            
+            // Afficher un message de confirmation
+            let message = `${importedCount} élève(s) importé(s) avec succès.`;
+            if (errors.length > 0) {
+                message += ` ${errors.length} élève(s) non importé(s) (déjà existants).`;
+            }
+            showAlert(message, 'success');
+        });
+        
+        // Annuler l'aperçu CSV
+        document.getElementById('cancel-preview').addEventListener('click', function() {
+            document.getElementById('preview-section').style.display = 'none';
+            document.getElementById('csv-file').value = '';
+            csvData = [];
+        });
+        
+        // === FONCTIONS DE SAUVEGARDE ET RESTAURATION JSON ===
+        
+        // Sauvegarder les données en JSON
+        document.getElementById('backup-btn').addEventListener('click', function() {
+            const backupData = {
+                students: students,
+                classes: classes,
+                attendanceRecords: attendanceRecords,
+                backupDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const date = new Date();
+            const fileName = `sauvegarde_eleves_${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}.json`;
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            
+            showAlert('Sauvegarde des données créée avec succès', 'success');
+        });
+        
+        // Restaurer les données depuis JSON
+        document.getElementById('restore-btn').addEventListener('click', function() {
+            // Créer un input file caché
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.json';
+            fileInput.style.display = 'none';
+            
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const backupData = JSON.parse(e.target.result);
+                        
+                        // Vérifier la structure du fichier
+                        if (!backupData.students || !backupData.classes || !backupData.attendanceRecords) {
+                            showAlert('Format de fichier invalide', 'error');
+                            return;
+                        }
+                        
+                        // Demander confirmation
+                        if (confirm(`Cette action remplacera toutes les données actuelles.\n\nÊtes-vous sûr de vouloir restaurer cette sauvegarde ?\n\nContenu de la sauvegarde:\n- ${backupData.students.length} élève(s)\n- ${backupData.classes.length} classe(s)\n- ${backupData.attendanceRecords.length} enregistrement(s) de présence`)) {
+                            // Remplacer les données
+                            students = backupData.students;
+                            classes = backupData.classes;
+                            attendanceRecords = backupData.attendanceRecords;
+                            
+                            // Sauvegarder dans le localStorage
+                            localStorage.setItem('students', JSON.stringify(students));
+                            localStorage.setItem('classes', JSON.stringify(classes));
+                            localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+                            
+                            // Mettre à jour l'affichage
+                            updateStats();
+                            
+                            // Recharger les présences si on est sur l'onglet des présences
+                            if (document.getElementById('attendance-tab').classList.contains('active')) {
+                                loadAttendanceForDate();
+                            }
+                            
+                            showAlert('Données restaurées avec succès', 'success');
+                        }
+                    } catch (error) {
+                        showAlert('Erreur lors de la lecture du fichier JSON: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            });
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+            document.body.removeChild(fileInput);
+        });
+        
+        // Réinitialiser l'application
+        document.getElementById('reset-app-btn').addEventListener('click', function() {
+            if (confirm('ATTENTION: Cette action supprimera toutes les données (élèves, classes, présences).\n\nCette action est irréversible.\n\nÊtes-vous ABSOLUMENT sûr ?')) {
+                // Supprimer toutes les données
+                students = [];
+                classes = [];
+                attendanceRecords = [];
+                
+                // Réinitialiser le localStorage
+                localStorage.removeItem('students');
+                localStorage.removeItem('classes');
+                localStorage.removeItem('attendanceRecords');
+                
+                // Réinitialiser les classes par défaut
+                classes = [
+                    { id: '1', name: 'CP', description: 'Cours Préparatoire' },
+                    { id: '2', name: 'CE1', description: 'Cours Élémentaire 1' },
+                    { id: '3', name: 'CE2', description: 'Cours Élémentaire 2' },
+                    { id: '4', name: 'CM1', description: 'Cours Moyen 1' },
+                    { id: '5', name: 'CM2', description: 'Cours Moyen 2' },
+                    { id: '6', name: '6ème', description: 'Sixième' },
+                    { id: '7', name: '5ème', description: 'Cinquième' },
+                    { id: '8', name: '4ème', description: 'Quatrième' },
+                    { id: '9', name: '3ème', description: 'Troisième' }
+                ];
+                localStorage.setItem('classes', JSON.stringify(classes));
+                
+                // Mettre à jour l'affichage
+                updateStats();
+                
+                // Recharger les présences si on est sur l'onglet des présences
+                if (document.getElementById('attendance-tab').classList.contains('active')) {
+                    loadAttendanceForDate();
+                }
+                
+                showAlert('Application réinitialisée avec succès', 'success');
+            }
+        });
         
         // Initialiser l'application
         document.addEventListener('DOMContentLoaded', function() {
