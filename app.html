@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Élèves - Présences et Retards</title>
+    <title>Gestion des Élèves - Présences Matin/Après-midi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Styles CSS inchangés - identiques à la version précédente */
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +21,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -232,6 +233,14 @@
             background-color: #c82333;
         }
         
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        
         .buttons {
             display: flex;
             gap: 10px;
@@ -298,32 +307,38 @@
             overflow-x: auto;
         }
         
-        .students-table, .attendance-table {
+        .students-table, .attendance-table, .classes-table, .stats-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
         
         .students-table th, .students-table td,
-        .attendance-table th, .attendance-table td {
+        .attendance-table th, .attendance-table td,
+        .classes-table th, .classes-table td,
+        .stats-table th, .stats-table td {
             border: 1px solid #ddd;
             padding: 12px 15px;
             text-align: left;
         }
         
-        .students-table th, .attendance-table th {
+        .students-table th, .attendance-table th, .classes-table th, .stats-table th {
             background-color: #4a6fa5;
             color: white;
             font-weight: 600;
         }
         
         .students-table tr:nth-child(even),
-        .attendance-table tr:nth-child(even) {
+        .attendance-table tr:nth-child(even),
+        .classes-table tr:nth-child(even),
+        .stats-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         
         .students-table tr:hover,
-        .attendance-table tr:hover {
+        .attendance-table tr:hover,
+        .classes-table tr:hover,
+        .stats-table tr:hover {
             background-color: #f1f5fd;
         }
         
@@ -338,6 +353,20 @@
         
         .delete-btn:hover {
             color: #c0392b;
+        }
+        
+        .edit-btn {
+            color: #3498db;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            margin-right: 10px;
+            transition: color 0.3s;
+        }
+        
+        .edit-btn:hover {
+            color: #2980b9;
         }
         
         .alert {
@@ -554,6 +583,243 @@
             color: #4a6fa5;
             font-size: 1.2rem;
         }
+        
+        .status-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #adb5bd;
+        }
+        
+        /* Styles pour les paramètres */
+        .settings-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .class-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .class-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .class-item:last-child {
+            border-bottom: none;
+        }
+        
+        .class-name {
+            font-weight: 600;
+        }
+        
+        .class-student-count {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .class-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .class-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .class-list-header {
+            background-color: #f2f2f2;
+            padding: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        /* Styles pour les présences matin/après-midi */
+        .period-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eaeaea;
+        }
+        
+        .period-tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .period-tab:hover {
+            color: #4a6fa5;
+            background-color: #f8f9fa;
+        }
+        
+        .period-tab.active {
+            color: #4a6fa5;
+            border-bottom: 3px solid #4a6fa5;
+        }
+        
+        .period-content {
+            display: none;
+        }
+        
+        .period-content.active {
+            display: block;
+        }
+        
+        .period-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #4a6fa5;
+            text-align: center;
+        }
+        
+        /* Styles pour les statistiques */
+        .stats-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .stats-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        
+        .stats-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4a6fa5;
+        }
+        
+        .stat-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4a6fa5;
+        }
+        
+        .stat-detail {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            font-weight: bold;
+        }
+        
+        .excel-btn {
+            background-color: #1d6f42;
+        }
+        
+        .excel-btn:hover {
+            background-color: #155d32;
+        }
+        
+        .attendance-period {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .period-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .period-morning {
+            background-color: #3498db;
+        }
+        
+        .period-afternoon {
+            background-color: #e74c3c;
+        }
+        
+        .period-both {
+            background-color: #9b59b6;
+        }
+        
+        .time-display {
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .excel-preview {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -562,7 +828,7 @@
             <div class="header-content">
                 <div>
                     <h1><i class="fas fa-user-graduate"></i> Gestion des Élèves</h1>
-                    <p class="subtitle">Saisie d'élèves, présences et retards</p>
+                    <p class="subtitle">Saisie d'élèves, présences matin/après-midi et statistiques</p>
                 </div>
                 <div class="stats">
                     <div class="stat-box">
@@ -588,6 +854,12 @@
             <div class="tab" data-tab="attendance-tab">
                 <i class="fas fa-clipboard-check"></i> Présences
             </div>
+            <div class="tab" data-tab="stats-tab">
+                <i class="fas fa-chart-bar"></i> Statistiques
+            </div>
+            <div class="tab" data-tab="settings-tab">
+                <i class="fas fa-cog"></i> Paramètres
+            </div>
             <div class="tab" data-tab="history-tab">
                 <i class="fas fa-history"></i> Historique
             </div>
@@ -612,29 +884,10 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="birthdate">Date de naissance</label>
-                            <input type="date" id="birthdate">
-                        </div>
-                        
-                        <div class="form-group">
                             <label for="class">Classe *</label>
                             <select id="class" required>
                                 <option value="">Sélectionnez une classe</option>
-                                <option value="CP">CP</option>
-                                <option value="CE1">CE1</option>
-                                <option value="CE2">CE2</option>
-                                <option value="CM1">CM1</option>
-                                <option value="CM2">CM2</option>
-                                <option value="6ème">6ème</option>
-                                <option value="5ème">5ème</option>
-                                <option value="4ème">4ème</option>
-                                <option value="3ème">3ème</option>
                             </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="email">Email (parent)</label>
-                            <input type="email" id="email">
                         </div>
                         
                         <div class="buttons">
@@ -654,8 +907,8 @@
                     
                     <div class="csv-format">
                         <p><strong>Format attendu :</strong> Chaque ligne doit contenir :</p>
-                        <p><code>Prénom, Nom, DateNaissance, Classe, Email</code></p>
-                        <p><small>La date doit être au format AAAA-MM-JJ (ex: 2015-03-22)</small></p>
+                        <p><code>Prénom, Nom, Classe</code></p>
+                        <p><small>Exemple: Jean,Dupont,CM1</small></p>
                     </div>
                     
                     <div class="file-upload" id="file-upload-area">
@@ -673,13 +926,10 @@
                                     <tr>
                                         <th>Prénom</th>
                                         <th>Nom</th>
-                                        <th>Date de naissance</th>
                                         <th>Classe</th>
-                                        <th>Email</th>
                                     </tr>
                                 </thead>
                                 <tbody id="preview-body">
-                                    <!-- Données CSV affichées ici -->
                                 </tbody>
                             </table>
                         </div>
@@ -703,20 +953,21 @@
                                 <tr>
                                     <th>Prénom</th>
                                     <th>Nom</th>
-                                    <th>Date de naissance</th>
-                                    <th>Âge</th>
                                     <th>Classe</th>
-                                    <th>Email</th>
+                                    <th>Total Absences</th>
+                                    <th>Total Retard</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="students-body">
-                                <!-- Données des élèves affichées ici -->
-                                <tr id="no-data-row">
-                                    <td colspan="7" class="no-data">Aucun élève enregistré. Ajoutez des élèves manuellement ou importez un fichier CSV.</td>
-                                </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <div id="no-students-message" class="empty-state" style="display: none;">
+                        <i class="fas fa-user-graduate"></i>
+                        <h3>Aucun élève enregistré</h3>
+                        <p>Ajoutez des élèves manuellement ou importez un fichier CSV.</p>
                     </div>
                     
                     <div class="buttons" style="margin-top: 20px;">
@@ -741,6 +992,10 @@
                         <label for="attendance-date">Date :</label>
                         <input type="date" id="attendance-date" value="">
                     </div>
+                    <div class="period-tabs">
+                        <div class="period-tab active" data-period="morning">Matin</div>
+                        <div class="period-tab" data-period="afternoon">Après-midi</div>
+                    </div>
                     <div class="attendance-actions">
                         <button type="button" class="btn btn-success" id="mark-all-present">
                             <i class="fas fa-check-circle"></i> Tous présents
@@ -754,7 +1009,17 @@
                     </div>
                 </div>
                 
-                <div class="table-container">
+                <div class="period-info" id="period-info">
+                    Enregistrement des présences pour le <span id="current-date"></span> - <span id="current-period">Matin</span>
+                </div>
+                
+                <div id="no-attendance-message" class="empty-state" style="display: none;">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Aucun élève enregistré</h3>
+                    <p>Veuillez d'abord ajouter des élèves dans l'onglet "Élèves".</p>
+                </div>
+                
+                <div class="table-container" id="attendance-container">
                     <table class="attendance-table" id="attendance-table">
                         <thead>
                             <tr>
@@ -762,32 +1027,230 @@
                                 <th>Nom</th>
                                 <th>Classe</th>
                                 <th>Statut</th>
-                                <th>Retard (min)</th>
+                                <th>Retard</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="attendance-body">
-                            <!-- Données des présences affichées ici -->
                         </tbody>
                     </table>
                 </div>
                 
-                <div class="attendance-summary">
+                <div class="attendance-summary" id="attendance-summary" style="display: none;">
                     <div class="summary-card">
-                        <h3>Présents aujourd'hui</h3>
+                        <h3>Présents</h3>
                         <div class="summary-number" id="summary-present">0</div>
                     </div>
                     <div class="summary-card">
-                        <h3>Absents aujourd'hui</h3>
+                        <h3>Absents</h3>
                         <div class="summary-number" id="summary-absent">0</div>
                     </div>
                     <div class="summary-card">
-                        <h3>En retard aujourd'hui</h3>
+                        <h3>En retard</h3>
                         <div class="summary-number" id="summary-late">0</div>
                     </div>
-                    <div class="summary-card">
-                        <h3>Taux de présence</h3>
-                        <div class="summary-number" id="summary-rate">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Onglet Statistiques -->
+        <div class="tab-content" id="stats-tab">
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Statistiques des absences et retards</h2>
+                
+                <div class="stats-controls">
+                    <div class="filter-group">
+                        <label for="stats-class">Classe :</label>
+                        <select id="stats-class">
+                            <option value="">Toutes les classes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="stats-month">Mois :</label>
+                        <select id="stats-month">
+                            <option value="">Tous les mois</option>
+                            <option value="01">Janvier</option>
+                            <option value="02">Février</option>
+                            <option value="03">Mars</option>
+                            <option value="04">Avril</option>
+                            <option value="05">Mai</option>
+                            <option value="06">Juin</option>
+                            <option value="07">Juillet</option>
+                            <option value="08">Août</option>
+                            <option value="09">Septembre</option>
+                            <option value="10">Octobre</option>
+                            <option value="11">Novembre</option>
+                            <option value="12">Décembre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="stats-year">Année :</label>
+                        <select id="stats-year">
+                            <option value="">Toutes les années</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <button type="button" class="btn btn-success" id="generate-stats">
+                            <i class="fas fa-chart-line"></i> Générer les statistiques
+                        </button>
+                        <button type="button" class="btn excel-btn" id="export-stats-excel">
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>Statistiques par élève</h3>
+                    <div class="table-container">
+                        <table class="stats-table" id="student-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Élève</th>
+                                    <th>Classe</th>
+                                    <th>Total Absences</th>
+                                    <th>Absences Matin</th>
+                                    <th>Absences Après-midi</th>
+                                    <th>Total Retard</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-stats-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>Statistiques par classe</h3>
+                    <div class="table-container">
+                        <table class="stats-table" id="class-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Nombre d'élèves</th>
+                                    <th>Total Absences</th>
+                                    <th>Moyenne absences/élève</th>
+                                    <th>Total Retard</th>
+                                    <th>Moyenne retard/élève</th>
+                                </tr>
+                            </thead>
+                            <tbody id="class-stats-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>Évolution mensuelle des absences</h3>
+                    <div class="table-container">
+                        <table class="stats-table" id="monthly-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Mois</th>
+                                    <th>Total Absences</th>
+                                    <th>Absences Matin</th>
+                                    <th>Absences Après-midi</th>
+                                    <th>Total Retard</th>
+                                    <th>Élèves concernés</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-stats-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="excel-preview-container" style="display: none;">
+                    <h3>Aperçu du fichier Excel</h3>
+                    <div class="excel-preview" id="excel-preview">
+                    </div>
+                    <div class="export-options">
+                        <button type="button" class="btn excel-btn" id="download-excel">
+                            <i class="fas fa-download"></i> Télécharger le fichier Excel
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancel-excel">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Onglet Paramètres -->
+        <div class="tab-content" id="settings-tab">
+            <div class="settings-content">
+                <div class="card">
+                    <h2><i class="fas fa-chalkboard-teacher"></i> Gestion des classes</h2>
+                    
+                    <div class="class-form">
+                        <div class="form-group">
+                            <label for="class-name">Nom de la classe *</label>
+                            <input type="text" id="class-name" placeholder="Ex: CM1, 6ème, etc.">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="class-description">Description (optionnel)</label>
+                            <input type="text" id="class-description" placeholder="Ex: Classe de Monsieur Martin">
+                        </div>
+                        
+                        <div class="buttons">
+                            <button type="button" class="btn btn-success" id="add-class-btn">
+                                <i class="fas fa-plus"></i> Ajouter la classe
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="reset-class-form">
+                                <i class="fas fa-redo"></i> Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="class-list-container" style="margin-top: 30px;">
+                        <div class="class-list-header">
+                            Liste des classes
+                        </div>
+                        <div id="classes-list">
+                        </div>
+                    </div>
+                    
+                    <div id="no-classes-message" class="empty-state" style="display: none;">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <h3>Aucune classe définie</h3>
+                        <p>Ajoutez votre première classe pour pouvoir assigner des élèves.</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-tools"></i> Options de l'application</h2>
+                    
+                    <div class="form-group">
+                        <label for="default-class">Classe par défaut pour nouveaux élèves</label>
+                        <select id="default-class">
+                            <option value="">Aucune par défaut</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="backup-data">Sauvegarde des données</label>
+                        <div class="buttons">
+                            <button type="button" class="btn btn-info" id="backup-btn">
+                                <i class="fas fa-download"></i> Sauvegarder
+                            </button>
+                            <button type="button" class="btn btn-warning" id="restore-btn">
+                                <i class="fas fa-upload"></i> Restaurer
+                            </button>
+                        </div>
+                        <small>Sauvegardez toutes vos données (élèves, classes, présences) dans un fichier.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reset-app">Réinitialisation de l'application</label>
+                        <div class="buttons">
+                            <button type="button" class="btn btn-danger" id="reset-app-btn">
+                                <i class="fas fa-trash-alt"></i> Tout réinitialiser
+                            </button>
+                        </div>
+                        <small>Attention: Cette action supprimera toutes les données et ne peut pas être annulée.</small>
                     </div>
                 </div>
             </div>
@@ -819,6 +1282,15 @@
                     </div>
                     
                     <div class="filter-group">
+                        <label for="filter-period">Filtrer par période :</label>
+                        <select id="filter-period">
+                            <option value="">Toutes les périodes</option>
+                            <option value="morning">Matin</option>
+                            <option value="afternoon">Après-midi</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
                         <label for="filter-status">Filtrer par statut :</label>
                         <select id="filter-status">
                             <option value="">Tous les statuts</option>
@@ -838,20 +1310,26 @@
                     </div>
                 </div>
                 
-                <div class="table-container">
+                <div id="no-history-message" class="empty-state" style="display: none;">
+                    <i class="fas fa-history"></i>
+                    <h3>Aucun historique de présence</h3>
+                    <p>Les présences enregistrées apparaîtront ici.</p>
+                </div>
+                
+                <div class="table-container" id="history-container">
                     <table class="history-table" id="history-table">
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Période</th>
                                 <th>Élève</th>
                                 <th>Classe</th>
                                 <th>Statut</th>
-                                <th>Retard (min)</th>
+                                <th>Retard</th>
                                 <th>Heure d'enregistrement</th>
                             </tr>
                         </thead>
                         <tbody id="history-body">
-                            <!-- Historique des présences affiché ici -->
                         </tbody>
                     </table>
                 </div>
@@ -868,15 +1346,45 @@
         </div>
         
         <footer>
-            <p>Application de Gestion des Élèves - Présences et Retards &copy; 2023 | Développé avec HTML, CSS et JavaScript</p>
+            <p>Application de Gestion des Élèves - Présences Matin/Après-midi & Statistiques &copy; 2023</p>
         </footer>
     </div>
 
     <script>
         // Variables globales
         let students = JSON.parse(localStorage.getItem('students')) || [];
+        let classes = JSON.parse(localStorage.getItem('classes')) || [
+            { id: '1', name: 'CP', description: 'Cours Préparatoire' },
+            { id: '2', name: 'CE1', description: 'Cours Élémentaire 1' },
+            { id: '3', name: 'CE2', description: 'Cours Élémentaire 2' },
+            { id: '4', name: 'CM1', description: 'Cours Moyen 1' },
+            { id: '5', name: 'CM2', description: 'Cours Moyen 2' },
+            { id: '6', name: '6ème', description: 'Sixième' },
+            { id: '7', name: '5ème', description: 'Cinquième' },
+            { id: '8', name: '4ème', description: 'Quatrième' },
+            { id: '9', name: '3ème', description: 'Troisième' }
+        ];
         let attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
         let csvData = [];
+        let editingClassId = null;
+        let currentPeriod = 'morning';
+        let excelData = null;
+        
+        // Initialiser les classes si elles n'existent pas encore
+        if (classes.length === 0) {
+            classes = [
+                { id: '1', name: 'CP', description: 'Cours Préparatoire' },
+                { id: '2', name: 'CE1', description: 'Cours Élémentaire 1' },
+                { id: '3', name: 'CE2', description: 'Cours Élémentaire 2' },
+                { id: '4', name: 'CM1', description: 'Cours Moyen 1' },
+                { id: '5', name: 'CM2', description: 'Cours Moyen 2' },
+                { id: '6', name: '6ème', description: 'Sixième' },
+                { id: '7', name: '5ème', description: 'Cinquième' },
+                { id: '8', name: '4ème', description: 'Quatrième' },
+                { id: '9', name: '3ème', description: 'Troisième' }
+            ];
+            localStorage.setItem('classes', JSON.stringify(classes));
+        }
         
         // Initialiser la date d'aujourd'hui
         function getTodayDate() {
@@ -884,66 +1392,268 @@
             return today.toISOString().split('T')[0];
         }
         
+        // Formater une date
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString;
+                }
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                return date.toLocaleDateString('fr-FR', options);
+            } catch (error) {
+                return dateString;
+            }
+        }
+        
+        // Convertir les minutes en format lisible (jours, heures, minutes)
+        function formatMinutes(minutes) {
+            if (!minutes || minutes === 0) return "0 min";
+            
+            const jours = Math.floor(minutes / (24 * 60));
+            const heures = Math.floor((minutes % (24 * 60)) / 60);
+            const mins = minutes % 60;
+            
+            let result = "";
+            if (jours > 0) {
+                result += `${jours} jour${jours > 1 ? 's' : ''} `;
+            }
+            if (heures > 0) {
+                result += `${heures} h `;
+            }
+            if (mins > 0 || (jours === 0 && heures === 0)) {
+                result += `${mins} min`;
+            }
+            
+            return result.trim();
+        }
+        
+        // Convertir les minutes en format court pour les tableaux
+        function formatMinutesShort(minutes) {
+            if (!minutes || minutes === 0) return "0 min";
+            
+            if (minutes >= 24 * 60) {
+                const jours = Math.floor(minutes / (24 * 60));
+                const heures = Math.floor((minutes % (24 * 60)) / 60);
+                return `${jours}j ${heures}h`;
+            } else if (minutes >= 60) {
+                const heures = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return `${heures}h ${mins}min`;
+            } else {
+                return `${minutes} min`;
+            }
+        }
+        
+        // Fonction pour encoder les caractères spéciaux pour CSV/Excel
+        function encodeForCSV(text) {
+            if (!text) return '';
+            return '"' + String(text).replace(/"/g, '""') + '"';
+        }
+        
+        // Fonction pour créer un tableau Excel avec bordures
+        function createExcelTable(headers, data) {
+            let table = '';
+            
+            // En-têtes avec bordures
+            table += '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px;">\n';
+            table += '<tr style="background-color: #4a6fa5; color: white; font-weight: bold;">\n';
+            headers.forEach(header => {
+                table += `<td align="center">${encodeForCSV(header)}</td>\n`;
+            });
+            table += '</tr>\n';
+            
+            // Données avec bordures
+            data.forEach(row => {
+                table += '<tr>\n';
+                row.forEach(cell => {
+                    table += `<td>${encodeForCSV(cell)}</td>\n`;
+                });
+                table += '</tr>\n';
+            });
+            
+            table += '</table>';
+            return table;
+        }
+        
         // Mise à jour des statistiques
         function updateStats() {
             document.getElementById('total-students').textContent = students.length;
+            document.getElementById('total-classes').textContent = classes.length;
             
-            // Compter le nombre de classes uniques
-            const uniqueClasses = [...new Set(students.map(student => student.class))];
-            document.getElementById('total-classes').textContent = uniqueClasses.length;
-            
-            // Calculer les présences d'aujourd'hui
             const today = getTodayDate();
-            const todayRecords = attendanceRecords.filter(record => record.date === today);
+            const todayRecords = attendanceRecords.filter(record => 
+                record.date === today && record.period === currentPeriod
+            );
             const presentToday = todayRecords.filter(record => record.status === 'present' || record.status === 'late').length;
             document.getElementById('today-present').textContent = presentToday;
             
-            // Mettre à jour l'affichage de la liste
             displayStudents();
-            // Mettre à jour les listes de filtres
             updateFilterOptions();
+            updateClassLists();
+            updateStatsYears();
         }
         
-        // Afficher les élèves dans le tableau
+        // Mettre à jour les années pour les statistiques
+        function updateStatsYears() {
+            const statsYearSelect = document.getElementById('stats-year');
+            const currentYear = new Date().getFullYear();
+            
+            statsYearSelect.innerHTML = '<option value="">Toutes les années</option>';
+            
+            const years = new Set();
+            attendanceRecords.forEach(record => {
+                if (record.date) {
+                    const year = record.date.split('-')[0];
+                    years.add(year);
+                }
+            });
+            
+            Array.from(years).sort().reverse().forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                statsYearSelect.appendChild(option);
+            });
+            
+            if (!years.has(currentYear.toString())) {
+                const option = document.createElement('option');
+                option.value = currentYear;
+                option.textContent = currentYear;
+                statsYearSelect.appendChild(option);
+            }
+        }
+        
+        // Mettre à jour les listes de classes dans les formulaires
+        function updateClassLists() {
+            const classSelect = document.getElementById('class');
+            const filterClassSelect = document.getElementById('filter-class');
+            const defaultClassSelect = document.getElementById('default-class');
+            const statsClassSelect = document.getElementById('stats-class');
+            
+            const selectedClass = classSelect.value;
+            const selectedFilterClass = filterClassSelect.value;
+            const selectedDefaultClass = defaultClassSelect.value;
+            const selectedStatsClass = statsClassSelect.value;
+            
+            classSelect.innerHTML = '<option value="">Sélectionnez une classe</option>';
+            filterClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+            defaultClassSelect.innerHTML = '<option value="">Aucune par défaut</option>';
+            statsClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+            
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = `${cls.name}${cls.description ? ` - ${cls.description}` : ''}`;
+                classSelect.appendChild(option);
+                
+                const filterOption = document.createElement('option');
+                filterOption.value = cls.id;
+                filterOption.textContent = cls.name;
+                filterClassSelect.appendChild(filterOption);
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = cls.id;
+                defaultOption.textContent = `${cls.name}${cls.description ? ` - ${cls.description}` : ''}`;
+                defaultClassSelect.appendChild(defaultOption);
+                
+                const statsOption = document.createElement('option');
+                statsOption.value = cls.id;
+                statsOption.textContent = cls.name;
+                statsClassSelect.appendChild(statsOption);
+            });
+            
+            if (selectedClass) classSelect.value = selectedClass;
+            if (selectedFilterClass) filterClassSelect.value = selectedFilterClass;
+            if (selectedDefaultClass) defaultClassSelect.value = selectedDefaultClass;
+            if (selectedStatsClass) statsClassSelect.value = selectedStatsClass;
+            
+            displayClassesList();
+        }
+        
+        // Afficher la liste des classes dans le panneau de paramètres
+        function displayClassesList() {
+            const classesList = document.getElementById('classes-list');
+            const noClassesMessage = document.getElementById('no-classes-message');
+            
+            if (classes.length === 0) {
+                noClassesMessage.style.display = 'block';
+                classesList.innerHTML = '';
+                return;
+            }
+            
+            noClassesMessage.style.display = 'none';
+            
+            const studentCountByClass = {};
+            students.forEach(student => {
+                if (student.class) {
+                    studentCountByClass[student.class] = (studentCountByClass[student.class] || 0) + 1;
+                }
+            });
+            
+            classesList.innerHTML = '';
+            classes.forEach(cls => {
+                const studentCount = studentCountByClass[cls.id] || 0;
+                
+                const classItem = document.createElement('div');
+                classItem.className = 'class-item';
+                classItem.innerHTML = `
+                    <div>
+                        <div class="class-name">${cls.name}</div>
+                        <div class="class-student-count">${studentCount} élève(s)</div>
+                        ${cls.description ? `<div style="font-size: 0.85rem; color: #666;">${cls.description}</div>` : ''}
+                    </div>
+                    <div class="class-actions">
+                        <button class="edit-btn" onclick="editClass('${cls.id}')" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteClass('${cls.id}')" title="Supprimer" ${studentCount > 0 ? 'disabled' : ''}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                if (studentCount > 0) {
+                    const deleteBtn = classItem.querySelector('.delete-btn');
+                    deleteBtn.style.opacity = '0.5';
+                    deleteBtn.style.cursor = 'not-allowed';
+                    deleteBtn.title = 'Impossible de supprimer : des élèves sont assignés à cette classe';
+                }
+                
+                classesList.appendChild(classItem);
+            });
+        }
+        
+        // Afficher les élèves dans le tableau avec leurs statistiques
         function displayStudents() {
             const tbody = document.getElementById('students-body');
-            const noDataRow = document.getElementById('no-data-row');
+            const noStudentsMessage = document.getElementById('no-students-message');
             
-            // Vider le tableau
             tbody.innerHTML = '';
             
             if (students.length === 0) {
-                // Afficher le message "aucune donnée"
-                tbody.appendChild(noDataRow);
-                noDataRow.style.display = '';
+                noStudentsMessage.style.display = 'block';
+                tbody.style.display = 'none';
             } else {
-                // Masquer le message "aucune donnée"
-                noDataRow.style.display = 'none';
+                noStudentsMessage.style.display = 'none';
+                tbody.style.display = '';
                 
-                // Ajouter chaque élève au tableau
                 students.forEach((student, index) => {
                     const row = document.createElement('tr');
                     
-                    // Calculer l'âge à partir de la date de naissance
-                    let age = '';
-                    if (student.birthdate) {
-                        const birthDate = new Date(student.birthdate);
-                        const today = new Date();
-                        let calculatedAge = today.getFullYear() - birthDate.getFullYear();
-                        const monthDiff = today.getMonth() - birthDate.getMonth();
-                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                            calculatedAge--;
-                        }
-                        age = calculatedAge + ' ans';
-                    }
+                    const studentClass = classes.find(cls => cls.id === student.class);
+                    const className = studentClass ? studentClass.name : 'Classe inconnue';
+                    
+                    const studentRecords = attendanceRecords.filter(record => record.studentId === student.id);
+                    const totalAbsences = studentRecords.filter(record => record.status === 'absent').length;
+                    const totalLateMinutes = studentRecords.reduce((sum, record) => sum + (record.lateMinutes || 0), 0);
                     
                     row.innerHTML = `
                         <td>${student.firstName}</td>
                         <td>${student.lastName}</td>
-                        <td>${student.birthdate || ''}</td>
-                        <td>${age}</td>
-                        <td>${student.class}</td>
-                        <td>${student.email || ''}</td>
+                        <td>${className}</td>
+                        <td>${totalAbsences}</td>
+                        <td class="time-display">${formatMinutesShort(totalLateMinutes)}</td>
                         <td>
                             <button class="delete-btn" onclick="deleteStudent(${index})" title="Supprimer">
                                 <i class="fas fa-trash"></i>
@@ -958,24 +1668,12 @@
         
         // Mettre à jour les options des filtres
         function updateFilterOptions() {
-            const classFilter = document.getElementById('filter-class');
             const studentFilter = document.getElementById('filter-student');
             
-            // Mettre à jour les classes
-            const uniqueClasses = [...new Set(students.map(student => student.class))];
-            classFilter.innerHTML = '<option value="">Toutes les classes</option>';
-            uniqueClasses.forEach(className => {
-                const option = document.createElement('option');
-                option.value = className;
-                option.textContent = className;
-                classFilter.appendChild(option);
-            });
-            
-            // Mettre à jour les élèves
             studentFilter.innerHTML = '<option value="">Tous les élèves</option>';
             students.forEach(student => {
                 const option = document.createElement('option');
-                option.value = student.id || `${student.firstName} ${student.lastName}`;
+                option.value = student.id;
                 option.textContent = `${student.firstName} ${student.lastName}`;
                 studentFilter.appendChild(option);
             });
@@ -987,9 +1685,7 @@
             
             const firstName = document.getElementById('first-name').value.trim();
             const lastName = document.getElementById('last-name').value.trim();
-            const birthdate = document.getElementById('birthdate').value;
             const studentClass = document.getElementById('class').value;
-            const email = document.getElementById('email').value.trim();
             
             if (!firstName || !lastName || !studentClass) {
                 showAlert('Veuillez remplir tous les champs obligatoires (*)', 'error');
@@ -997,24 +1693,17 @@
             }
             
             const newStudent = {
-                id: Date.now().toString(), // ID unique
+                id: Date.now().toString(),
                 firstName,
                 lastName,
-                birthdate,
-                class: studentClass,
-                email
+                class: studentClass
             };
             
             students.push(newStudent);
             localStorage.setItem('students', JSON.stringify(students));
             
-            // Mettre à jour l'affichage
             updateStats();
-            
-            // Réinitialiser le formulaire
             this.reset();
-            
-            // Afficher un message de confirmation
             showAlert(`Élève ${firstName} ${lastName} ajouté avec succès!`, 'success');
         });
         
@@ -1024,7 +1713,6 @@
                 const deletedStudent = students.splice(index, 1);
                 localStorage.setItem('students', JSON.stringify(students));
                 
-                // Supprimer aussi les enregistrements de présence de cet élève
                 attendanceRecords = attendanceRecords.filter(record => {
                     const student = students.find(s => s.id === record.studentId);
                     return student !== undefined;
@@ -1033,32 +1721,51 @@
                 
                 updateStats();
                 showAlert(`Élève ${deletedStudent[0].firstName} ${deletedStudent[0].lastName} supprimé`, 'success');
+                
+                if (document.getElementById('attendance-tab').classList.contains('active')) {
+                    loadAttendanceForDate();
+                }
             }
         }
         
-        // Gestion des onglets
+        // Gestion des onglets principaux
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabId = this.getAttribute('data-tab');
                 
-                // Désactiver tous les onglets
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
                 
-                // Activer l'onglet sélectionné
                 this.classList.add('active');
                 document.getElementById(tabId).classList.add('active');
                 
-                // Si on active l'onglet des présences, charger les données
                 if (tabId === 'attendance-tab') {
                     loadAttendanceForDate();
                 } else if (tabId === 'history-tab') {
                     loadAttendanceHistory();
+                } else if (tabId === 'settings-tab') {
+                    displayClassesList();
+                } else if (tabId === 'stats-tab') {
+                    generateStatistics();
                 }
             });
         });
         
-        // Charger les données de présence pour une date
+        // Gestion des onglets de période (matin/après-midi)
+        document.querySelectorAll('.period-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const period = this.getAttribute('data-period');
+                
+                document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentPeriod = period;
+                
+                document.getElementById('current-period').textContent = period === 'morning' ? 'Matin' : 'Après-midi';
+                loadAttendanceForDate();
+            });
+        });
+        
+        // Charger les données de présence pour une date et période
         function loadAttendanceForDate() {
             const dateInput = document.getElementById('attendance-date');
             if (!dateInput.value) {
@@ -1067,55 +1774,70 @@
             
             const selectedDate = dateInput.value;
             const tbody = document.getElementById('attendance-body');
+            const noAttendanceMessage = document.getElementById('no-attendance-message');
+            const attendanceContainer = document.getElementById('attendance-container');
+            const attendanceSummary = document.getElementById('attendance-summary');
+            const periodInfo = document.getElementById('period-info');
+            const currentDateSpan = document.getElementById('current-date');
+            
+            currentDateSpan.textContent = formatDate(selectedDate);
+            
             tbody.innerHTML = '';
             
             if (students.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="6" class="no-data">Aucun élève enregistré. Veuillez d'abord ajouter des élèves.</td>
-                `;
-                tbody.appendChild(row);
+                noAttendanceMessage.style.display = 'block';
+                attendanceContainer.style.display = 'none';
+                attendanceSummary.style.display = 'none';
+                periodInfo.style.display = 'none';
                 return;
+            } else {
+                noAttendanceMessage.style.display = 'none';
+                attendanceContainer.style.display = 'block';
+                attendanceSummary.style.display = 'grid';
+                periodInfo.style.display = 'block';
             }
             
-            // Pour chaque élève, créer une ligne dans le tableau des présences
             students.forEach(student => {
                 const row = document.createElement('tr');
                 
-                // Trouver l'enregistrement de présence pour cet élève à cette date
                 const existingRecord = attendanceRecords.find(record => 
-                    record.studentId === student.id && record.date === selectedDate
+                    record.studentId === student.id && 
+                    record.date === selectedDate && 
+                    record.period === currentPeriod
                 );
                 
                 const status = existingRecord ? existingRecord.status : 'present';
                 const lateMinutes = existingRecord ? existingRecord.lateMinutes || 0 : 0;
                 
+                const studentClass = classes.find(cls => cls.id === student.class);
+                const className = studentClass ? studentClass.name : 'Classe inconnue';
+                
                 row.innerHTML = `
                     <td>${student.firstName}</td>
                     <td>${student.lastName}</td>
-                    <td>${student.class}</td>
+                    <td>${className}</td>
                     <td>
-                        <span class="attendance-status status-${status}" id="status-${student.id}">
+                        <span class="attendance-status status-${status}" id="status-${student.id}-${currentPeriod}">
                             ${status === 'present' ? 'Présent' : (status === 'absent' ? 'Absent' : 'En retard')}
                         </span>
                     </td>
-                    <td>
+                    <td class="time-display">
                         <div class="late-duration">
-                            <input type="number" id="late-${student.id}" min="0" max="240" value="${lateMinutes}" 
+                            <input type="number" id="late-${student.id}-${currentPeriod}" min="0" max="1440" value="${lateMinutes}" 
                                    ${status !== 'late' ? 'disabled' : ''}>
                             <span>min</span>
                         </div>
                     </td>
                     <td>
-                        <div class="buttons">
+                        <div class="status-actions">
                             <button type="button" class="attendance-btn present-btn small-btn" onclick="setAttendance('${student.id}', 'present')">
-                                <i class="fas fa-check"></i> Présent
+                                <i class="fas fa-check"></i>
                             </button>
                             <button type="button" class="attendance-btn absent-btn small-btn" onclick="setAttendance('${student.id}', 'absent')">
-                                <i class="fas fa-times"></i> Absent
+                                <i class="fas fa-times"></i>
                             </button>
                             <button type="button" class="attendance-btn late-btn small-btn" onclick="setAttendance('${student.id}', 'late')">
-                                <i class="fas fa-clock"></i> Retard
+                                <i class="fas fa-clock"></i>
                             </button>
                         </div>
                     </td>
@@ -1132,22 +1854,23 @@
             const dateInput = document.getElementById('attendance-date');
             const selectedDate = dateInput.value;
             
-            // Mettre à jour l'affichage du statut
-            const statusElement = document.getElementById(`status-${studentId}`);
-            statusElement.className = `attendance-status status-${status}`;
-            statusElement.textContent = status === 'present' ? 'Présent' : (status === 'absent' ? 'Absent' : 'En retard');
-            
-            // Activer/désactiver le champ de retard
-            const lateInput = document.getElementById(`late-${studentId}`);
-            if (status === 'late') {
-                lateInput.disabled = false;
-            } else {
-                lateInput.disabled = true;
-                lateInput.value = 0;
+            const statusElement = document.getElementById(`status-${studentId}-${currentPeriod}`);
+            if (statusElement) {
+                statusElement.className = `attendance-status status-${status}`;
+                statusElement.textContent = status === 'present' ? 'Présent' : (status === 'absent' ? 'Absent' : 'En retard');
+                
+                const lateInput = document.getElementById(`late-${studentId}-${currentPeriod}`);
+                if (lateInput) {
+                    if (status === 'late') {
+                        lateInput.disabled = false;
+                    } else {
+                        lateInput.disabled = true;
+                        lateInput.value = 0;
+                    }
+                }
+                
+                updateAttendanceSummary();
             }
-            
-            // Mettre à jour le résumé
-            updateAttendanceSummary();
         }
         
         // Mettre à jour le résumé des présences
@@ -1159,9 +1882,8 @@
             let absentCount = 0;
             let lateCount = 0;
             
-            // Compter les statuts
             students.forEach(student => {
-                const statusElement = document.getElementById(`status-${student.id}`);
+                const statusElement = document.getElementById(`status-${student.id}-${currentPeriod}`);
                 if (statusElement) {
                     const status = statusElement.classList.contains('status-present') ? 'present' : 
                                   (statusElement.classList.contains('status-absent') ? 'absent' : 'late');
@@ -1172,15 +1894,9 @@
                 }
             });
             
-            // Mettre à jour l'affichage
             document.getElementById('summary-present').textContent = presentCount + lateCount;
             document.getElementById('summary-absent').textContent = absentCount;
             document.getElementById('summary-late').textContent = lateCount;
-            
-            // Calculer le taux de présence
-            const total = students.length;
-            const attendanceRate = total > 0 ? Math.round(((presentCount + lateCount) / total) * 100) : 0;
-            document.getElementById('summary-rate').textContent = `${attendanceRate}%`;
         }
         
         // Enregistrer toutes les présences
@@ -1188,24 +1904,35 @@
             const dateInput = document.getElementById('attendance-date');
             const selectedDate = dateInput.value;
             
-            // Supprimer les anciens enregistrements pour cette date
-            attendanceRecords = attendanceRecords.filter(record => record.date !== selectedDate);
+            if (!selectedDate) {
+                showAlert('Veuillez sélectionner une date', 'error');
+                return;
+            }
             
-            // Enregistrer les nouvelles présences
+            if (students.length === 0) {
+                showAlert('Aucun élève à enregistrer', 'error');
+                return;
+            }
+            
+            attendanceRecords = attendanceRecords.filter(record => 
+                !(record.date === selectedDate && record.period === currentPeriod)
+            );
+            
             students.forEach(student => {
-                const statusElement = document.getElementById(`status-${student.id}`);
+                const statusElement = document.getElementById(`status-${student.id}-${currentPeriod}`);
                 if (statusElement) {
                     const status = statusElement.classList.contains('status-present') ? 'present' : 
                                   (statusElement.classList.contains('status-absent') ? 'absent' : 'late');
                     
                     const lateMinutes = status === 'late' ? 
-                        parseInt(document.getElementById(`late-${student.id}`).value) || 0 : 0;
+                        parseInt(document.getElementById(`late-${student.id}-${currentPeriod}`).value) || 0 : 0;
                     
                     attendanceRecords.push({
                         studentId: student.id,
                         studentName: `${student.firstName} ${student.lastName}`,
                         studentClass: student.class,
                         date: selectedDate,
+                        period: currentPeriod,
                         status: status,
                         lateMinutes: lateMinutes,
                         recordedAt: new Date().toLocaleString('fr-FR')
@@ -1215,7 +1942,7 @@
             
             localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
             updateStats();
-            showAlert(`Présences enregistrées pour le ${formatDate(selectedDate)}`, 'success');
+            showAlert(`Présences enregistrées pour le ${formatDate(selectedDate)} (${currentPeriod === 'morning' ? 'Matin' : 'Après-midi'})`, 'success');
         });
         
         // Marquer tous les élèves comme présents
@@ -1232,323 +1959,308 @@
             });
         });
         
-        // Charger l'historique des présences
-        function loadAttendanceHistory() {
-            const classFilter = document.getElementById('filter-class').value;
-            const studentFilter = document.getElementById('filter-student').value;
-            const dateFilter = document.getElementById('filter-date').value;
-            const statusFilter = document.getElementById('filter-status').value;
+        // Générer les statistiques
+        function generateStatistics() {
+            const classFilter = document.getElementById('stats-class').value;
+            const monthFilter = document.getElementById('stats-month').value;
+            const yearFilter = document.getElementById('stats-year').value;
             
-            const tbody = document.getElementById('history-body');
-            tbody.innerHTML = '';
-            
-            if (attendanceRecords.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="6" class="no-data">Aucun enregistrement de présence.</td>
-                `;
-                tbody.appendChild(row);
-                return;
-            }
-            
-            // Filtrer les enregistrements
             let filteredRecords = [...attendanceRecords];
             
             if (classFilter) {
                 filteredRecords = filteredRecords.filter(record => record.studentClass === classFilter);
             }
             
-            if (studentFilter) {
-                filteredRecords = filteredRecords.filter(record => record.studentId === studentFilter || record.studentName === studentFilter);
-            }
-            
-            if (dateFilter) {
-                filteredRecords = filteredRecords.filter(record => record.date === dateFilter);
-            }
-            
-            if (statusFilter) {
-                filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
-            }
-            
-            // Trier par date (plus récent d'abord)
-            filteredRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            if (filteredRecords.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="6" class="no-data">Aucun enregistrement ne correspond aux filtres.</td>
-                `;
-                tbody.appendChild(row);
-                return;
-            }
-            
-            // Afficher les enregistrements
-            filteredRecords.forEach(record => {
-                const row = document.createElement('tr');
-                
-                // Trouver l'élève correspondant
-                const student = students.find(s => s.id === record.studentId);
-                const studentName = student ? `${student.firstName} ${student.lastName}` : record.studentName;
-                
-                row.innerHTML = `
-                    <td>${formatDate(record.date)}</td>
-                    <td>${studentName}</td>
-                    <td>${record.studentClass}</td>
-                    <td>
-                        <span class="attendance-status status-${record.status}">
-                            ${record.status === 'present' ? 'Présent' : (record.status === 'absent' ? 'Absent' : 'En retard')}
-                        </span>
-                    </td>
-                    <td>${record.lateMinutes > 0 ? `${record.lateMinutes} min` : '-'}</td>
-                    <td>${record.recordedAt}</td>
-                `;
-                
-                tbody.appendChild(row);
-            });
-        }
-        
-        // Formater une date
-        function formatDate(dateString) {
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            return new Date(dateString).toLocaleDateString('fr-FR', options);
-        }
-        
-        // Appliquer les filtres
-        document.getElementById('apply-filters').addEventListener('click', loadAttendanceHistory);
-        
-        // Réinitialiser les filtres
-        document.getElementById('reset-filters').addEventListener('click', function() {
-            document.getElementById('filter-class').value = '';
-            document.getElementById('filter-student').value = '';
-            document.getElementById('filter-date').value = '';
-            document.getElementById('filter-status').value = '';
-            loadAttendanceHistory();
-        });
-        
-        // Exporter l'historique
-        document.getElementById('export-attendance').addEventListener('click', function() {
-            if (attendanceRecords.length === 0) {
-                showAlert('Aucun enregistrement à exporter', 'error');
-                return;
-            }
-            
-            // Créer l'en-tête CSV
-            let csvContent = "Date,Élève,Classe,Statut,Retard(min),Heure d'enregistrement\n";
-            
-            // Ajouter les données
-            attendanceRecords.forEach(record => {
-                const student = students.find(s => s.id === record.studentId);
-                const studentName = student ? `${student.firstName} ${student.lastName}` : record.studentName;
-                
-                const row = [
-                    record.date,
-                    studentName,
-                    record.studentClass,
-                    record.status === 'present' ? 'Présent' : (record.status === 'absent' ? 'Absent' : 'En retard'),
-                    record.lateMinutes || '0',
-                    record.recordedAt
-                ];
-                csvContent += row.join(',') + '\n';
-            });
-            
-            // Créer un fichier et le télécharger
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `presences_${new Date().toISOString().slice(0, 10)}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Fichier CSV exporté avec ${attendanceRecords.length} enregistrement(s)`, 'success');
-        });
-        
-        // Vider l'historique
-        document.getElementById('clear-history').addEventListener('click', function() {
-            if (attendanceRecords.length === 0) {
-                showAlert('L\'historique est déjà vide', 'error');
-                return;
-            }
-            
-            if (confirm(`Voulez-vous vraiment supprimer tous les ${attendanceRecords.length} enregistrements de présence ? Cette action est irréversible.`)) {
-                attendanceRecords = [];
-                localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-                loadAttendanceHistory();
-                showAlert('Historique des présences vidé', 'success');
-            }
-        });
-        
-        // Gestion de l'import CSV (inchangée)
-        document.getElementById('csv-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(event) {
-                const content = event.target.result;
-                parseCSV(content);
-            };
-            
-            reader.readAsText(file);
-        });
-        
-        // Zone de glisser-déposer (inchangée)
-        const fileUploadArea = document.getElementById('file-upload-area');
-        fileUploadArea.addEventListener('click', function() {
-            document.getElementById('csv-file').click();
-        });
-        
-        // Parser le contenu CSV (inchangée)
-        function parseCSV(content) {
-            csvData = [];
-            const lines = content.split('\n');
-            const previewBody = document.getElementById('preview-body');
-            previewBody.innerHTML = '';
-            
-            const validLines = lines.filter(line => line.trim() !== '');
-            
-            if (validLines.length === 0) {
-                showAlert('Le fichier CSV est vide', 'error');
-                return;
-            }
-            
-            let startIndex = 0;
-            const firstLine = validLines[0].split(',');
-            const firstLineLower = firstLine.map(col => col.trim().toLowerCase());
-            const headerKeywords = ['prénom', 'nom', 'date', 'classe', 'email'];
-            const isHeader = firstLineLower.some(col => headerKeywords.some(keyword => col.includes(keyword)));
-            
-            if (isHeader) {
-                startIndex = 1;
-            }
-            
-            const previewLimit = Math.min(validLines.length - startIndex, 10);
-            
-            for (let i = startIndex; i < startIndex + previewLimit; i++) {
-                const columns = validLines[i].split(',');
-                
-                const firstName = columns[0] ? columns[0].trim() : '';
-                const lastName = columns[1] ? columns[1].trim() : '';
-                const birthdate = columns[2] ? columns[2].trim() : '';
-                const studentClass = columns[3] ? columns[3].trim() : '';
-                const email = columns[4] ? columns[4].trim() : '';
-                
-                if (!firstName || !lastName) {
-                    continue;
-                }
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${firstName}</td>
-                    <td>${lastName}</td>
-                    <td>${birthdate}</td>
-                    <td>${studentClass}</td>
-                    <td>${email}</td>
-                `;
-                previewBody.appendChild(row);
-                
-                csvData.push({
-                    id: Date.now().toString() + i,
-                    firstName,
-                    lastName,
-                    birthdate,
-                    class: studentClass,
-                    email
+            if (monthFilter || yearFilter) {
+                filteredRecords = filteredRecords.filter(record => {
+                    if (!record.date) return false;
+                    
+                    const [year, month] = record.date.split('-');
+                    
+                    if (monthFilter && month !== monthFilter) return false;
+                    if (yearFilter && year !== yearFilter) return false;
+                    
+                    return true;
                 });
             }
             
-            document.getElementById('preview-section').style.display = 'block';
-            
-            if (validLines.length - startIndex > previewLimit) {
-                const messageRow = document.createElement('tr');
-                messageRow.innerHTML = `
-                    <td colspan="5" style="text-align: center; font-style: italic;">
-                        ... et ${validLines.length - startIndex - previewLimit} autres élèves
-                    </td>
-                `;
-                previewBody.appendChild(messageRow);
-            }
-        }
-        
-        // Importer les données CSV (inchangée)
-        document.getElementById('import-btn').addEventListener('click', function() {
-            if (csvData.length === 0) {
-                showAlert('Aucune donnée valide à importer', 'error');
-                return;
-            }
-            
-            const beforeCount = students.length;
-            students.push(...csvData);
-            localStorage.setItem('students', JSON.stringify(students));
-            
-            updateStats();
-            
-            document.getElementById('preview-section').style.display = 'none';
-            document.getElementById('csv-file').value = '';
-            csvData = [];
-            
-            const importedCount = students.length - beforeCount;
-            showAlert(`${importedCount} élève(s) importé(s) avec succès!`, 'success');
-        });
-        
-        // Annuler l'aperçu CSV (inchangée)
-        document.getElementById('cancel-preview').addEventListener('click', function() {
-            document.getElementById('preview-section').style.display = 'none';
-            document.getElementById('csv-file').value = '';
-            csvData = [];
-        });
-        
-        // Exporter les données en CSV (inchangée)
-        document.getElementById('export-btn').addEventListener('click', function() {
-            if (students.length === 0) {
-                showAlert('Aucun élève à exporter', 'error');
-                return;
-            }
-            
-            let csvContent = "Prénom,Nom,DateNaissance,Classe,Email\n";
-            
-            students.forEach(student => {
-                const row = [
-                    student.firstName,
-                    student.lastName,
-                    student.birthdate || '',
-                    student.class,
-                    student.email || ''
-                ];
-                csvContent += row.join(',') + '\n';
+            // Calculer les statistiques par élève
+            const studentStats = {};
+            filteredRecords.forEach(record => {
+                if (!studentStats[record.studentId]) {
+                    studentStats[record.studentId] = {
+                        name: record.studentName,
+                        class: record.studentClass,
+                        totalAbsences: 0,
+                        morningAbsences: 0,
+                        afternoonAbsences: 0,
+                        totalLateMinutes: 0,
+                        totalRecords: 0
+                    };
+                }
+                
+                studentStats[record.studentId].totalRecords++;
+                
+                if (record.status === 'absent') {
+                    studentStats[record.studentId].totalAbsences++;
+                    if (record.period === 'morning') {
+                        studentStats[record.studentId].morningAbsences++;
+                    } else {
+                        studentStats[record.studentId].afternoonAbsences++;
+                    }
+                }
+                
+                if (record.lateMinutes) {
+                    studentStats[record.studentId].totalLateMinutes += record.lateMinutes;
+                }
             });
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            // Afficher les statistiques par élève
+            const studentStatsBody = document.getElementById('student-stats-body');
+            studentStatsBody.innerHTML = '';
+            
+            Object.values(studentStats).forEach(stat => {
+                const studentClass = classes.find(c => c.id === stat.class);
+                const className = studentClass ? studentClass.name : 'Inconnue';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${stat.name}</td>
+                    <td>${className}</td>
+                    <td>${stat.totalAbsences}</td>
+                    <td>${stat.morningAbsences}</td>
+                    <td>${stat.afternoonAbsences}</td>
+                    <td class="time-display">${formatMinutesShort(stat.totalLateMinutes)}</td>
+                `;
+                studentStatsBody.appendChild(row);
+            });
+            
+            // Calculer les statistiques par classe
+            const classStats = {};
+            Object.values(studentStats).forEach(stat => {
+                if (!classStats[stat.class]) {
+                    classStats[stat.class] = {
+                        totalStudents: 0,
+                        totalAbsences: 0,
+                        totalLateMinutes: 0,
+                        totalRecords: 0
+                    };
+                }
+                
+                classStats[stat.class].totalStudents++;
+                classStats[stat.class].totalAbsences += stat.totalAbsences;
+                classStats[stat.class].totalLateMinutes += stat.totalLateMinutes;
+                classStats[stat.class].totalRecords += stat.totalRecords;
+            });
+            
+            // Afficher les statistiques par classe
+            const classStatsBody = document.getElementById('class-stats-body');
+            classStatsBody.innerHTML = '';
+            
+            Object.entries(classStats).forEach(([classId, stat]) => {
+                const classObj = classes.find(c => c.id === classId);
+                const className = classObj ? classObj.name : 'Inconnue';
+                const avgAbsences = stat.totalStudents > 0 ? (stat.totalAbsences / stat.totalStudents).toFixed(1) : '0';
+                const avgLateMinutes = stat.totalStudents > 0 ? Math.round(stat.totalLateMinutes / stat.totalStudents) : 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${className}</td>
+                    <td>${stat.totalStudents}</td>
+                    <td>${stat.totalAbsences}</td>
+                    <td>${avgAbsences}</td>
+                    <td class="time-display">${formatMinutesShort(stat.totalLateMinutes)}</td>
+                    <td class="time-display">${formatMinutesShort(avgLateMinutes)}</td>
+                `;
+                classStatsBody.appendChild(row);
+            });
+            
+            // Calculer les statistiques mensuelles
+            const monthlyStats = {};
+            filteredRecords.forEach(record => {
+                if (!record.date) return;
+                
+                const [year, month] = record.date.split('-');
+                const monthKey = `${year}-${month}`;
+                
+                if (!monthlyStats[monthKey]) {
+                    monthlyStats[monthKey] = {
+                        month: month,
+                        year: year,
+                        totalAbsences: 0,
+                        morningAbsences: 0,
+                        afternoonAbsences: 0,
+                        totalLateMinutes: 0,
+                        students: new Set()
+                    };
+                }
+                
+                monthlyStats[monthKey].students.add(record.studentId);
+                
+                if (record.status === 'absent') {
+                    monthlyStats[monthKey].totalAbsences++;
+                    if (record.period === 'morning') {
+                        monthlyStats[monthKey].morningAbsences++;
+                    } else {
+                        monthlyStats[monthKey].afternoonAbsences++;
+                    }
+                }
+                
+                if (record.lateMinutes) {
+                    monthlyStats[monthKey].totalLateMinutes += record.lateMinutes;
+                }
+            });
+            
+            // Afficher les statistiques mensuelles
+            const monthlyStatsBody = document.getElementById('monthly-stats-body');
+            monthlyStatsBody.innerHTML = '';
+            
+            Object.values(monthlyStats).sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            }).forEach(stat => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${getMonthName(stat.month)} ${stat.year}</td>
+                    <td>${stat.totalAbsences}</td>
+                    <td>${stat.morningAbsences}</td>
+                    <td>${stat.afternoonAbsences}</td>
+                    <td class="time-display">${formatMinutesShort(stat.totalLateMinutes)}</td>
+                    <td>${stat.students.size}</td>
+                `;
+                monthlyStatsBody.appendChild(row);
+            });
+            
+            // Préparer les données pour Excel - VERSION SIMPLIFIÉE (seulement les stats par élève)
+            prepareExcelData(filteredRecords, studentStats, classStats, monthlyStats, {
+                classFilter, monthFilter, yearFilter
+            });
+        }
+        
+        // Obtenir le nom du mois
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+            ];
+            return months[parseInt(monthNumber) - 1] || 'Inconnu';
+        }
+        
+        // Préparer les données pour Excel - VERSION SIMPLIFIÉE
+        function prepareExcelData(filteredRecords, studentStats, classStats, monthlyStats, filters) {
+            const classObj = classes.find(c => c.id === filters.classFilter);
+            const className = classObj ? classObj.name : 'Toutes classes';
+            const monthName = filters.monthFilter ? getMonthName(filters.monthFilter) : 'Tous mois';
+            const year = filters.yearFilter || 'Toutes années';
+            
+            // Créer le fichier HTML avec tableaux formatés pour Excel
+            let htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n';
+            htmlContent += '<style>\n';
+            htmlContent += 'table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; width: 100%; }\n';
+            htmlContent += 'th { background-color: #4a6fa5; color: white; font-weight: bold; padding: 8px; border: 1px solid #ddd; text-align: center; }\n';
+            htmlContent += 'td { padding: 6px; border: 1px solid #ddd; }\n';
+            htmlContent += '.header { font-size: 16px; font-weight: bold; margin-bottom: 20px; }\n';
+            htmlContent += '.section-title { font-size: 14px; font-weight: bold; margin-top: 30px; margin-bottom: 10px; color: #2c3e50; }\n';
+            htmlContent += '.info { margin-bottom: 20px; font-size: 12px; }\n';
+            htmlContent += '</style>\n</head>\n<body>\n';
+            
+            // En-tête du rapport
+            htmlContent += '<div class="header">RAPPORT DES ABSENCES ET RETARDS</div>\n';
+            htmlContent += '<div class="info">\n';
+            htmlContent += `<strong>Période:</strong> ${monthName} ${year}<br>\n`;
+            htmlContent += `<strong>Classe:</strong> ${className}<br>\n`;
+            htmlContent += `<strong>Date de génération:</strong> ${new Date().toLocaleDateString('fr-FR')}\n`;
+            htmlContent += '</div>\n';
+            
+            // Tableau 1: Statistiques par élève (SEULEMENT CE TABLEAU)
+            htmlContent += '<div class="section-title">Statistiques par élève</div>\n';
+            
+            const studentHeaders = ['Élève', 'Classe', 'Total Absences', 'Absences Matin', 'Absences Après-midi', 'Total Retard'];
+            const studentData = [];
+            
+            Object.values(studentStats).forEach(stat => {
+                const studentClass = classes.find(c => c.id === stat.class);
+                const className = studentClass ? studentClass.name : 'Inconnue';
+                
+                studentData.push([
+                    stat.name,
+                    className,
+                    stat.totalAbsences,
+                    stat.morningAbsences,
+                    stat.afternoonAbsences,
+                    formatMinutes(stat.totalLateMinutes)
+                ]);
+            });
+            
+            htmlContent += createExcelTable(studentHeaders, studentData);
+            
+            // NOTE: Les autres tableaux (Statistiques par classe, Évolution mensuelle, Détail des absences)
+            // ont été supprimés comme demandé
+            
+            htmlContent += '</body>\n</html>';
+            
+            excelData = htmlContent;
+            
+            // Afficher l'aperçu
+            showExcelPreview();
+        }
+        
+        // Afficher l'aperçu Excel
+        function showExcelPreview() {
+            const previewContainer = document.getElementById('excel-preview-container');
+            const preview = document.getElementById('excel-preview');
+            
+            preview.innerHTML = excelData;
+            previewContainer.style.display = 'block';
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Télécharger le fichier Excel
+        document.getElementById('download-excel').addEventListener('click', function() {
+            if (!excelData) {
+                showAlert('Aucune donnée à exporter', 'error');
+                return;
+            }
+            
+            const classFilter = document.getElementById('stats-class').value;
+            const monthFilter = document.getElementById('stats-month').value;
+            const yearFilter = document.getElementById('stats-year').value;
+            
+            let fileName = 'rapport_absences';
+            if (classFilter) {
+                const classObj = classes.find(c => c.id === classFilter);
+                fileName += `_${classObj ? classObj.name.replace(/\s+/g, '_') : 'classe'}`;
+            }
+            if (monthFilter) {
+                fileName += `_${getMonthName(monthFilter)}`;
+            }
+            if (yearFilter) {
+                fileName += `_${yearFilter}`;
+            }
+            fileName += `_${new Date().toISOString().slice(0, 10)}.html`;
+            
+            // Créer et télécharger le fichier HTML
+            const blob = new Blob([excelData], { type: 'text/html;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
-            link.setAttribute('download', `eleves_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.setAttribute('download', fileName);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            showAlert(`Fichier CSV exporté avec ${students.length} élève(s)`, 'success');
+            showAlert('Rapport Excel généré avec succès', 'success');
         });
         
-        // Supprimer tous les élèves (inchangée)
-        document.getElementById('clear-all-btn').addEventListener('click', function() {
-            if (students.length === 0) {
-                showAlert('Aucun élève à supprimer', 'error');
-                return;
-            }
-            
-            if (confirm(`Voulez-vous vraiment supprimer tous les ${students.length} élèves ? Cette action est irréversible.`)) {
-                students = [];
-                attendanceRecords = [];
-                localStorage.setItem('students', JSON.stringify(students));
-                localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-                updateStats();
-                showAlert('Tous les élèves ont été supprimés', 'success');
-            }
+        // Annuler l'export Excel
+        document.getElementById('cancel-excel').addEventListener('click', function() {
+            document.getElementById('excel-preview-container').style.display = 'none';
+        });
+        
+        // Bouton pour exporter les statistiques en Excel
+        document.getElementById('export-stats-excel').addEventListener('click', function() {
+            generateStatistics();
         });
         
         // Afficher une alerte
@@ -1566,9 +2278,18 @@
         // Initialiser l'application
         document.addEventListener('DOMContentLoaded', function() {
             updateStats();
-            
-            // Initialiser la date pour les présences
             document.getElementById('attendance-date').value = getTodayDate();
+            
+            if (document.getElementById('attendance-tab').classList.contains('active')) {
+                loadAttendanceForDate();
+            }
+            
+            document.getElementById('generate-stats').addEventListener('click', generateStatistics);
+        });
+        
+        // Écouter les changements de date pour les présences
+        document.getElementById('attendance-date').addEventListener('change', function() {
+            loadAttendanceForDate();
         });
     </script>
 </body>
