@@ -1478,6 +1478,12 @@
                             <button type="button" class="btn btn-secondary" id="reset-class-form">
                                 <i class="fas fa-redo"></i> <span class="btn-text">Réinitialiser</span>
                             </button>
+                            <button type="button" class="btn btn-warning" id="update-class-btn" style="display: none;">
+                                <i class="fas fa-save"></i> <span class="btn-text">Mettre à jour</span>
+                            </button>
+                            <button type="button" class="btn btn-danger" id="cancel-edit-class" style="display: none;">
+                                <i class="fas fa-times"></i> <span class="btn-text">Annuler</span>
+                            </button>
                         </div>
                     </div>
                     
@@ -1627,7 +1633,7 @@
     </div>
 
     <script>
-        // Variables globales (le code JavaScript reste identique à la version précédente)
+        // Variables globales
         let students = JSON.parse(localStorage.getItem('students')) || [];
         let classes = JSON.parse(localStorage.getItem('classes')) || [
             { id: '1', name: 'CP', description: 'Cours Préparatoire' },
@@ -2003,6 +2009,156 @@
                 }
             }
         }
+        
+        // === FONCTIONS POUR LA GESTION DES CLASSES ===
+        
+        // Ajouter une classe
+        document.getElementById('add-class-btn').addEventListener('click', function() {
+            const className = document.getElementById('class-name').value.trim();
+            const classDescription = document.getElementById('class-description').value.trim();
+            
+            if (!className) {
+                showAlert('Veuillez saisir un nom de classe', 'error');
+                return;
+            }
+            
+            // Vérifier si la classe existe déjà
+            const existingClass = classes.find(cls => cls.name.toLowerCase() === className.toLowerCase());
+            if (existingClass) {
+                showAlert(`La classe "${className}" existe déjà`, 'error');
+                return;
+            }
+            
+            const newClass = {
+                id: Date.now().toString(),
+                name: className,
+                description: classDescription
+            };
+            
+            classes.push(newClass);
+            localStorage.setItem('classes', JSON.stringify(classes));
+            
+            // Réinitialiser le formulaire
+            document.getElementById('class-name').value = '';
+            document.getElementById('class-description').value = '';
+            
+            // Mettre à jour l'affichage
+            updateClassLists();
+            updateStats();
+            
+            showAlert(`Classe "${className}" ajoutée avec succès`, 'success');
+        });
+        
+        // Modifier une classe
+        window.editClass = function(classId) {
+            const classToEdit = classes.find(cls => cls.id === classId);
+            if (!classToEdit) return;
+            
+            // Remplir le formulaire avec les données de la classe
+            document.getElementById('class-name').value = classToEdit.name;
+            document.getElementById('class-description').value = classToEdit.description || '';
+            
+            // Changer l'interface pour le mode édition
+            editingClassId = classId;
+            document.getElementById('add-class-btn').style.display = 'none';
+            document.getElementById('reset-class-form').style.display = 'none';
+            document.getElementById('update-class-btn').style.display = 'inline-flex';
+            document.getElementById('cancel-edit-class').style.display = 'inline-flex';
+            
+            showAlert(`Mode édition pour la classe "${classToEdit.name}"`, 'info');
+        };
+        
+        // Mettre à jour une classe
+        document.getElementById('update-class-btn').addEventListener('click', function() {
+            if (!editingClassId) return;
+            
+            const className = document.getElementById('class-name').value.trim();
+            const classDescription = document.getElementById('class-description').value.trim();
+            
+            if (!className) {
+                showAlert('Veuillez saisir un nom de classe', 'error');
+                return;
+            }
+            
+            // Trouver la classe à modifier
+            const classIndex = classes.findIndex(cls => cls.id === editingClassId);
+            if (classIndex === -1) {
+                showAlert('Classe non trouvée', 'error');
+                return;
+            }
+            
+            // Vérifier si le nom existe déjà (sauf pour la classe en cours d'édition)
+            const existingClass = classes.find(cls => 
+                cls.name.toLowerCase() === className.toLowerCase() && cls.id !== editingClassId
+            );
+            if (existingClass) {
+                showAlert(`La classe "${className}" existe déjà`, 'error');
+                return;
+            }
+            
+            // Mettre à jour la classe
+            classes[classIndex].name = className;
+            classes[classIndex].description = classDescription;
+            localStorage.setItem('classes', JSON.stringify(classes));
+            
+            // Réinitialiser le mode édition
+            cancelEditClass();
+            
+            // Mettre à jour l'affichage
+            updateClassLists();
+            updateStats();
+            
+            showAlert(`Classe "${className}" mise à jour avec succès`, 'success');
+        });
+        
+        // Annuler l'édition d'une classe
+        document.getElementById('cancel-edit-class').addEventListener('click', cancelEditClass);
+        
+        function cancelEditClass() {
+            // Réinitialiser le formulaire
+            document.getElementById('class-name').value = '';
+            document.getElementById('class-description').value = '';
+            
+            // Réinitialiser l'interface
+            editingClassId = null;
+            document.getElementById('add-class-btn').style.display = 'inline-flex';
+            document.getElementById('reset-class-form').style.display = 'inline-flex';
+            document.getElementById('update-class-btn').style.display = 'none';
+            document.getElementById('cancel-edit-class').style.display = 'none';
+        }
+        
+        // Supprimer une classe
+        window.deleteClass = function(classId) {
+            const classToDelete = classes.find(cls => cls.id === classId);
+            if (!classToDelete) return;
+            
+            // Vérifier si des élèves sont assignés à cette classe
+            const studentsInClass = students.filter(student => student.class === classId);
+            
+            if (studentsInClass.length > 0) {
+                showAlert(`Impossible de supprimer cette classe : ${studentsInClass.length} élève(s) y sont assignés`, 'error');
+                return;
+            }
+            
+            if (confirm(`Voulez-vous vraiment supprimer la classe "${classToDelete.name}" ?`)) {
+                // Supprimer la classe
+                classes = classes.filter(cls => cls.id !== classId);
+                localStorage.setItem('classes', JSON.stringify(classes));
+                
+                // Mettre à jour l'affichage
+                updateClassLists();
+                updateStats();
+                
+                showAlert(`Classe "${classToDelete.name}" supprimée avec succès`, 'success');
+            }
+        };
+        
+        // Réinitialiser le formulaire des classes
+        document.getElementById('reset-class-form').addEventListener('click', function() {
+            document.getElementById('class-name').value = '';
+            document.getElementById('class-description').value = '';
+            cancelEditClass();
+        });
         
         // Gestion des onglets principaux
         document.querySelectorAll('.tab').forEach(tab => {
@@ -2863,35 +3019,6 @@
             }
             
             document.getElementById('generate-stats').addEventListener('click', generateStatistics);
-            
-            // Ajouter un bouton de retour en haut pour mobile
-            const backToTopBtn = document.createElement('button');
-            backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
-            backToTopBtn.className = 'btn btn-info';
-            backToTopBtn.style.position = 'fixed';
-            backToTopBtn.style.bottom = '20px';
-            backToTopBtn.style.right = '20px';
-            backToTopBtn.style.zIndex = '1000';
-            backToTopBtn.style.display = 'none';
-            backToTopBtn.style.padding = '12px';
-            backToTopBtn.style.borderRadius = '50%';
-            backToTopBtn.style.width = '50px';
-            backToTopBtn.style.height = '50px';
-            backToTopBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-            backToTopBtn.onclick = function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-            
-            document.body.appendChild(backToTopBtn);
-            
-            // Afficher/masquer le bouton de retour en haut
-            window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 300) {
-                    backToTopBtn.style.display = 'block';
-                } else {
-                    backToTopBtn.style.display = 'none';
-                }
-            });
         });
         
         // Écouter les changements de date pour les présences
