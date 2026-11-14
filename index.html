@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestion des absences et retards</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Absences"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f3f5fb;--card:#fff;--tx:#172033;--mu:#6a7488;--pr:#4f46e5;--pr2:#eef0ff;--bd:#e4e8f1;--ok:#0f9d6a;--okb:#e3f6ee;--no:#dc3545;--nob:#fde8ea;--wa:#d98a0b;--wab:#fff3dc;--sh:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.05);--side:#141b34;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1220;--card:#171d30;--tx:#e8ecf6;--mu:#93a0b8;--pr:#8b85ff;--pr2:#242a4d;--bd:#283049;--ok:#3ccf91;--okb:#12392d;--no:#ff7b86;--nob:#3d1e25;--wa:#f0b24c;--wab:#3b2e12;--side:#0a0e1b;--sh:none}}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx);display:flex;min-height:100vh;font-size:14px}
+aside{width:236px;background:var(--side);padding:20px 12px;position:sticky;top:0;height:100vh;flex:none;color:#cfd6ea}
+.logo{display:flex;gap:10px;align-items:center;margin:0 8px 24px;color:#fff;font-weight:700;font-size:15px;line-height:1.2}
+.logo i{font-style:normal;background:var(--pr);width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+nav button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;color:#b4bdd6;font:inherit;font-weight:500;padding:11px 12px;border-radius:10px;cursor:pointer;margin-bottom:4px;transition:.15s}
+nav button:hover{background:rgba(255,255,255,.07);color:#fff}nav button.on{background:var(--pr);color:#fff}
+main{flex:1;padding:28px;min-width:0;max-width:1200px}
+h2{margin:0 0 4px;font-size:24px;letter-spacing:-.02em}h3{margin:0 0 12px;font-size:16px}.sub{color:var(--mu);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:var(--sh)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px}
+.stat{display:flex;gap:12px;align-items:center;margin:0}
+.stat .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--pr2)}
+.stat b{display:block;font-size:26px;line-height:1.1}.stat span{color:var(--mu);font-size:12.5px}
+.wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--bd)}
+table{border-collapse:collapse;width:100%}
+th,td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--bd)}
+th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);position:sticky;top:0}
+td.l{text-align:left;font-weight:500}tbody tr:hover td,tr:hover>td{background:var(--pr2)}tr:last-child td{border-bottom:0}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;outline:none}
+input:focus,select:focus{border-color:var(--pr);box-shadow:0 0 0 3px var(--pr2)}
+button{cursor:pointer;transition:.15s;font-weight:500}button:hover{border-color:var(--pr)}
+button.pri{background:var(--pr);color:#fff;border-color:var(--pr)}button.pri:hover{filter:brightness(1.1)}button.dg{color:var(--no)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tg{min-width:84px;border-radius:20px;font-weight:600;font-size:13px}.tg.pr{background:var(--okb);color:var(--ok);border-color:transparent}.tg.ab{background:var(--nob);color:var(--no);border-color:transparent}
+.n{width:74px;text-align:center}.j{font-size:12px;display:block;color:var(--wa);margin-top:3px;cursor:pointer}.j input{width:auto;vertical-align:middle}
+.date{display:inline-block;background:var(--pr2);color:var(--pr);padding:6px 14px;border-radius:20px;font-weight:600;text-transform:capitalize;margin:4px 0 14px}
+.chip{display:inline-flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:2px}.chip button{border:0;background:none;padding:6px 10px}.chip button.pri{background:var(--pr)}
+.empty{color:var(--mu);padding:24px;text-align:center}
+dialog{border:0;border-radius:16px;background:var(--card);color:var(--tx);min-width:min(380px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3)}dialog::backdrop{background:rgba(10,14,30,.5)}
+dialog label{display:block;margin:10px 0;font-weight:500}dialog input{width:100%;margin-top:4px}
+#toast{position:fixed;bottom:18px;right:18px;background:var(--ok);color:#fff;padding:8px 16px;border-radius:20px;opacity:0;transform:translateY(8px);transition:.25s;font-weight:500}#toast.s{opacity:1;transform:none}
+.mu{color:var(--mu)}#print{display:none}
+@page{size:A4 landscape;margin:14mm;@bottom-center{content:"Page " counter(page) " / " counter(pages)}}
+@media print{body>*:not(#print){display:none!important}#print{display:block;color:#000}#print table{font-size:11px}#print th,#print td{border:1px solid #999}}
+@media (max-width:760px){body{flex-direction:column}aside{width:100%;height:auto;position:static;padding:10px}.logo{margin-bottom:10px}nav{display:flex;overflow-x:auto;gap:4px}nav button{white-space:nowrap;width:auto;margin:0}main{padding:14px}h2{font-size:20px}}
+</style>
+</head>
+<body>
+<aside><div class="logo"><i>🎓</i><span>Absences<br>&amp; Retards</span></div><nav>
+<button data-v="dash" onclick="go('dash')">📊 Tableau de bord</button>
+<button data-v="classes" onclick="go('classes')">🏫 Classes et élèves</button>
+<button data-v="att" onclick="go('att')">✅ Appel quotidien</button>
+<button data-v="rep" onclick="go('rep')">📄 Rapports</button>
+<button data-v="data" onclick="go('data')">💾 Données et sauvegarde</button></nav><button id="inst" class="pri" hidden onclick="ip.prompt()" style="margin-top:14px;width:100%">📲 Installer l’application</button></aside>
+<main id="app"></main>
+<dialog id="dlg"></dialog><div id="toast">Enregistré ✓</div><div id="print"></div>
+<input type="file" id="xf" accept=".xlsx,.xls" hidden><input type="file" id="jf" accept=".json" hidden>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=d=>d.toLocaleDateString('en-CA'),td=()=>fmt(new Date());
+const addD=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return fmt(d)};
+let db,S={classes:[],students:[],school:''},AM=new Map(),view='dash',cur={cls:null,date:td(),q:'',rc:'',rq:'',from:td(),to:td()},IM=null,chart1;
+const V={},TITLES={dash:['Tableau de bord','Vue d’ensemble de l’établissement'],classes:['Classes et élèves','Gérez vos classes et vos listes d’élèves'],att:['Appel quotidien','Matin et après-midi, retards en minutes'],rep:['Rapports','Exportez en Excel ou en PDF'],data:['Données et sauvegarde','Sauvegarde, restauration et import Excel']};
+const head=v=>`<h2>${TITLES[v][0]}</h2><p class="sub">${TITLES[v][1]}</p>`;
+// ---------- stockage ----------
+const open=()=>new Promise((ok,ko)=>{const q=indexedDB.open('attendance_app',1);q.onupgradeneeded=()=>{const d=q.result;d.createObjectStore('classes',{keyPath:'id',autoIncrement:true});d.createObjectStore('students',{keyPath:'id',autoIncrement:true});d.createObjectStore('att',{keyPath:'k'});d.createObjectStore('meta',{keyPath:'k'})};q.onsuccess=()=>{db=q.result;ok()};q.onerror=ko});
+const P=q=>new Promise(r=>{q.onsuccess=()=>r(q.result)}),st=(s,m)=>db.transaction(s,m).objectStore(s);
+const all=s=>P(st(s).getAll()),put=(s,v)=>P(st(s,'readwrite').put(v)),del=(s,k)=>P(st(s,'readwrite').delete(k));
+async function load(){S.classes=await all('classes');S.students=await all('students');AM=new Map((await all('att')).map(r=>[r.k,r]));const m=await P(st('meta').get('school'));S.school=m?m.v:''}
+function toast(){const t=$('#toast');t.classList.add('s');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('s'),900)}
+function dump(){return{version:1,date:new Date().toISOString(),school:S.school,classes:S.classes,students:S.students,att:[...AM.values()]}}
+async function restore(o){const tx=db.transaction(['classes','students','att','meta'],'readwrite');['classes','students','att'].forEach(s=>tx.objectStore(s).clear());(o.classes||[]).forEach(v=>tx.objectStore('classes').put(v));(o.students||[]).forEach(v=>tx.objectStore('students').put(v));(o.att||[]).forEach(v=>tx.objectStore('att').put(v));tx.objectStore('meta').put({k:'school',v:o.school||''});await new Promise(r=>tx.oncomplete=r);await load();render()}
+async function autoBackup(){const m=await P(st('meta').get('auto'));if(S.students.length&&(!m||m.d!==td()))await put('meta',{k:'auto',d:td(),data:dump()})}
+// ---------- aides UI ----------
+function dlg(title,fields=[],ok='Enregistrer'){return new Promise(res=>{const d=$('#dlg');d.innerHTML=`<form method="dialog"><h3>${title}</h3>${fields.map((f,i)=>`<label>${f[0]}<input id="f${i}" value="${esc(f[1]||'')}"></label>`).join('')}<div class="row" style="margin:16px 0 0;justify-content:flex-end"><button value="x">Annuler</button><button value="ok" class="pri">${ok}</button></div></form>`;d.onclose=()=>res(d.returnValue==='ok'?fields.map((_,i)=>$('#f'+i).value.trim()):null);d.showModal()})}
+const go=v=>{view=v;render()};
+function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));$('#app').innerHTML=V[view]();if(view==='dash')drawChart()}
+const cname=id=>(S.classes.find(c=>c.id==id)||{}).name||'';
+const sorted=a=>[...a].sort((x,y)=>x.name.localeCompare(y.name,'fr'));
+const opts=(sel,withAll)=>(withAll?`<option value="">Toutes les classes</option>`:'')+S.classes.map(c=>`<option value="${c.id}" ${c.id==sel?'selected':''}>${esc(c.name)}</option>`).join('');
+// ---------- statistiques ----------
+function stats(sid,f,t){const o={m:0,a:0,mj:0,aj:0,inc:0,min:0};for(const r of AM.values()){if(r.sid!==sid||r.d<f||r.d>t)continue;if(r.m){o.m++;if(r.mj)o.mj++}if(r.a){o.a++;if(r.aj)o.aj++}if(r.ml>0){o.inc++;o.min+=r.ml}if(r.al>0){o.inc++;o.min+=r.al}}o.s=o.m+o.a;o.days=o.s/2;o.j=o.mj+o.aj;o.u=o.s-o.j;return o}
+const monthR=()=>{const t=td(),y=+t.slice(0,4),m=+t.slice(5,7);return[t.slice(0,8)+'01',fmt(new Date(y,m,0))]};
+// ---------- tableau de bord ----------
+V.dash=()=>{const t=td(),[f,l]=monthR();let ab=new Set(),la=new Set(),sess=0,min=0;for(const r of AM.values()){if(r.d===t){if(r.m||r.a)ab.add(r.sid);if(r.ml>0||r.al>0)la.add(r.sid)}if(r.d>=f&&r.d<=l){sess+=(r.m?1:0)+(r.a?1:0);min+=(r.ml||0)+(r.al||0)}}
+const c=(i,n,l)=>`<div class="card stat"><div class="ic">${i}</div><div><b>${n}</b><span>${l}</span></div></div>`;
+return`${head('dash')}<div class="grid">${c('🏫',S.classes.length,'Classes')}${c('👨‍🎓',S.students.length,'Élèves')}${c('🚫',ab.size,'Absents aujourd’hui')}${c('⏰',la.size,'En retard aujourd’hui')}${c('📅',sess/2,'Jours d’absence (mois)')}${c('⏱️',min,'Minutes de retard (mois)')}</div>
+<div class="card"><h3>Accès rapide aux classes</h3><div class="row">${S.classes.map(k=>`<button onclick="openClass(${k.id})">${esc(k.name)} <span class="mu">· ${S.students.filter(s=>s.cid===k.id).length}</span></button>`).join('')||'<span class="mu">Aucune classe. Commencez par « Classes et élèves ».</span>'}</div></div>
+<div class="card"><h3>Statistiques du mois par classe</h3><div style="height:290px"><canvas id="ch"></canvas></div></div>`};
+function drawChart(){const [f,l]=monthR(),cv=$('#ch');if(!cv)return;if(chart1)chart1.destroy();const sum=(c,k)=>S.students.filter(s=>s.cid===c.id).reduce((a,s)=>a+stats(s.id,f,l)[k],0);
+chart1=new Chart(cv,{type:'bar',data:{labels:S.classes.map(c=>c.name),datasets:[{label:'Jours d’absence',data:S.classes.map(c=>sum(c,'days')),backgroundColor:'#dc3545',borderRadius:6},{label:'Minutes de retard',data:S.classes.map(c=>sum(c,'min')),backgroundColor:'#4f46e5',borderRadius:6}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}})}
+function openClass(id){cur.cls=id;go('classes')}
+// ---------- classes et élèves ----------
+V.classes=()=>`${head('classes')}<div class="card"><div class="row"><button class="pri" onclick="addClass()">+ Nouvelle classe</button></div><div class="row">${S.classes.map(c=>`<span class="chip"><button onclick="openClass(${c.id})" ${c.id===cur.cls?'class="pri"':''}>${esc(c.name)}</button><button title="Renommer" onclick="editClass(${c.id})">✎</button><button class="dg" title="Supprimer" onclick="delClass(${c.id})">🗑</button></span>`).join('')||'<span class="mu">Aucune classe.</span>'}</div></div>
+${cur.cls?`<div class="card"><h3>Élèves · ${esc(cname(cur.cls))}</h3><div class="row"><button class="pri" onclick="addStu()">+ Ajouter un élève</button><input placeholder="🔍 Rechercher par nom" value="${esc(cur.q)}" oninput="cur.q=this.value;$('#stl').innerHTML=stl()"></div><div class="wrap" id="stl">${stl()}</div></div>`:''}`;
+function stl(){const q=cur.q.trim().toLowerCase();const a=sorted(S.students.filter(s=>s.cid===cur.cls&&s.name.toLowerCase().includes(q)));return`<table><tr><th>N°</th><th style="text-align:left">Nom</th><th></th></tr>${a.map(s=>`<tr><td>${s.sid}</td><td class="l">${esc(s.name)}</td><td><button onclick="editStu(${s.id})">✎</button> <button class="dg" onclick="delStu(${s.id})">🗑</button></td></tr>`).join('')||'<tr><td colspan="3" class="empty">Aucun élève</td></tr>'}</table>`}
+async function addClass(){const r=await dlg('Nouvelle classe',[['Nom de la classe','']]);if(r&&r[0]){const id=await put('classes',{name:r[0]});await load();cur.cls=id;render()}}
+async function editClass(id){const c=S.classes.find(x=>x.id===id),r=await dlg('Renommer la classe',[['Nom',c.name]]);if(r&&r[0]){c.name=r[0];await put('classes',c);render()}}
+async function delClass(id){if(!await dlg('Supprimer cette classe, ses élèves et tout leur historique ?',[],'Supprimer'))return;for(const s of S.students.filter(s=>s.cid===id))await delStuData(s.id);await del('classes',id);if(cur.cls===id)cur.cls=null;await load();render()}
+const nextSid=()=>'ST'+String(S.students.reduce((m,s)=>Math.max(m,+s.sid.slice(2)||0),0)+1).padStart(4,'0');
+async function addStu(){const r=await dlg('Nouvel élève',[['Nom complet','']]);if(r&&r[0]){await put('students',{sid:nextSid(),name:r[0],cid:cur.cls});await load();render()}}
+async function editStu(id){const s=S.students.find(x=>x.id===id),r=await dlg('Modifier l’élève',[['Nom',s.name]]);if(r&&r[0]){s.name=r[0];await put('students',s);render()}}
+async function delStuData(id){await del('students',id);for(const r of [...AM.values()])if(r.sid===id)await del('att',r.k)}
+async function delStu(id){if(!await dlg('Supprimer cet élève et tout son historique ?',[],'Supprimer'))return;await delStuData(id);await load();render()}
+// ---------- appel quotidien ----------
+V.att=()=>{if(!cur.cls&&S.classes.length)cur.cls=S.classes[0].id;const d=cur.date,long=new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+return`${head('att')}<div class="card"><div class="row"><select onchange="cur.cls=+this.value;render()">${opts(cur.cls)}</select><span class="chip"><button onclick="cur.date=addD(cur.date,-1);render()">◀</button><input type="date" value="${d}" style="border:0" onchange="cur.date=this.value||td();render()"><button onclick="cur.date=addD(cur.date,1);render()">▶</button></span><button onclick="cur.date=td();render()">Aujourd’hui</button><button class="pri" onclick="allPresent()">✓ Tous présents</button></div><div class="date">📅 ${long}</div>
+<div class="wrap"><table><tr><th rowspan="2">#</th><th rowspan="2" style="text-align:left">Élève</th><th colspan="2">Matin</th><th colspan="2">Après-midi</th><th rowspan="2">Motif d’absence</th></tr><tr><th>Statut</th><th>Retard</th><th>Statut</th><th>Retard</th></tr>${attRows()}</table></div></div>`};
+function attRows(){const d=cur.date;return sorted(S.students.filter(s=>s.cid===cur.cls)).map((s,i)=>{const r=AM.get(d+'_'+s.id)||{};const tg=k=>`<button class="tg ${r[k]?'ab':'pr'}" onclick="tog(${s.id},'${k}')">${r[k]?'Absent':'Présent'}</button>${r[k]?`<label class="j"><input type="checkbox" ${r[k+'j']?'checked':''} onchange="upd(${s.id},{${k}j:this.checked?1:0})"> justifiée</label>`:''}`;
+return`<tr><td>${i+1}</td><td class="l">${esc(s.name)}</td><td>${tg('m')}</td><td><input type="number" min="0" class="n" placeholder="min" value="${r.ml||''}" onchange="upd(${s.id},{ml:Math.max(0,+this.value||0)})"></td><td>${tg('a')}</td><td><input type="number" min="0" class="n" placeholder="min" value="${r.al||''}" onchange="upd(${s.id},{al:Math.max(0,+this.value||0)})"></td><td><input value="${esc(r.r||'')}" placeholder="Optionnel" onchange="upd(${s.id},{r:this.value})"></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Ajoutez d’abord une classe et des élèves.</td></tr>'}
+async function upd(sid,p){const k=cur.date+'_'+sid,r=Object.assign(AM.get(k)||{k,d:cur.date,sid,cid:cur.cls,m:0,a:0,mj:0,aj:0,r:'',ml:0,al:0},p);AM.set(k,r);await put('att',r);toast()}
+async function tog(sid,k){const r=AM.get(cur.date+'_'+sid)||{};await upd(sid,{[k]:r[k]?0:1,[k+'j']:0});render()}
+async function allPresent(){for(const s of S.students.filter(s=>s.cid===cur.cls)){const r=AM.get(cur.date+'_'+s.id);if(r&&(r.m||r.a))await upd(s.id,{m:0,a:0,mj:0,aj:0})}render()}
+// ---------- rapports ----------
+const hm=m=>Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min';
+const MODES={all:'Tous les élèves',abs:'Absents seulement',late:'Retards seulement',both:'Absents et retards'};
+const hSum=['Classe','Nom','Abs. matin','Abs. après-midi','Séances d’absence','Jours d’absence','Justifiées','Non justifiées','Retards (nb)','Retard total (h min)','Jours de retard (8 h = 1 j)','Total jours'];
+function build(){const f=cur.from,t=cur.to,q=cur.rq.trim().toLowerCase(),md=cur.mode||'all';
+const a=sorted(S.students.filter(s=>(!cur.rc||s.cid==cur.rc)&&s.name.toLowerCase().includes(q))).sort((x,y)=>cname(x.cid).localeCompare(cname(y.cid),'fr'));
+const keep=(ab,la)=>md==='all'||(md==='abs'&&ab)||(md==='late'&&la)||(md==='both'&&(ab||la));
+if(f===t){const rows=[];for(const s of a){const r=AM.get(f+'_'+s.id)||{};if(!keep(r.m||r.a,r.ml>0||r.al>0))continue;const z=k=>r[k]?(r[k+'j']?'Absent (justifié)':'Absent'):'Présent';rows.push([cname(s.cid),s.name,z('m'),z('a'),r.ml||0,r.al||0,r.r||''])}return{head:['Classe','Nom','Matin','Après-midi','Retard matin (min)','Retard après-midi (min)','Motif'],rows}}
+const L=[];for(const s of a){const o=stats(s.id,f,t);if(keep(o.s>0,o.min>0))L.push(o&&[s,o])}
+const rows=L.map(([s,o])=>{const dj=Math.floor(o.min/480);return[cname(s.cid),s.name,o.m,o.a,o.s,o.days,o.j,o.u,o.inc,hm(o.min),dj,o.days+dj]});
+const c=i=>rows.reduce((x,r)=>x+r[i],0);
+const tot=['Total','',c(2),c(3),c(4),c(5),c(6),c(7),c(8),hm(L.reduce((x,[,o])=>x+o.min,0)),c(10),c(11)];return{head:hSum,rows:rows.length?[...rows,tot]:[]}}
+V.rep=()=>{const b=build();return`${head('rep')}<div class="card"><div class="row"><select onchange="cur.rc=this.value;render()">${opts(cur.rc,1)}</select><select onchange="cur.mode=this.value;render()">${Object.entries(MODES).map(([k,v])=>`<option value="${k}" ${(cur.mode||'all')===k?'selected':''}>${v}</option>`).join('')}</select><input placeholder="🔍 Élève" value="${esc(cur.rq)}" onchange="cur.rq=this.value;render()"></div><div class="row"><label>Du <input type="date" value="${cur.from}" onchange="cur.from=this.value;render()"></label><label>Au <input type="date" value="${cur.to}" onchange="cur.to=this.value;render()"></label><span class="chip"><button onclick="preset('d')">Jour</button><button onclick="preset('w')">Semaine</button><button onclick="preset('m')">Mois</button></span></div>
+<div class="row"><button class="pri" onclick="expXlsx()">⬇ Excel</button><button class="pri" onclick="expPdf()">⬇ PDF / Imprimer</button></div><div class="wrap"><table><tr>${b.head.map(h=>`<th>${h}</th>`).join('')}</tr>${b.rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i==1?'l':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td class="empty">Aucune donnée</td></tr>`}</table></div></div>`};
+function preset(k){const d=cur.from;if(k==='d')cur.to=d;if(k==='w'){const w=(new Date(d+'T12:00:00').getDay()+6)%7;cur.from=addD(d,-w);cur.to=addD(cur.from,6)}if(k==='m'){const y=+d.slice(0,4),m=+d.slice(5,7);cur.from=d.slice(0,8)+'01';cur.to=fmt(new Date(y,m,0))}render()}
+const title=()=>`${S.school||'Établissement'} — ${cur.rc?cname(cur.rc):'Toutes les classes'} — ${MODES[cur.mode||'all']} — ${cur.from===cur.to?cur.from:cur.from+' → '+cur.to}`;
+function expXlsx(){const b=build(),ws=XLSX.utils.aoa_to_sheet([[title()],['Généré le '+new Date().toLocaleString('fr-FR')],[],b.head,...b.rows]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Rapport');XLSX.writeFile(wb,`rapport_${cur.from}_${cur.to}.xlsx`)}
+function expPdf(){const b=build();$('#print').innerHTML=`<h2 style="text-align:center">${esc(S.school||'Établissement')}</h2><p>Classe : ${esc(cur.rc?cname(cur.rc):'Toutes les classes')} | Contenu : ${MODES[cur.mode||'all']} | Période : ${cur.from} → ${cur.to} | Généré le ${new Date().toLocaleDateString('fr-FR')}</p><table><tr>${b.head.map(h=>`<th>${h}</th>`).join('')}</tr>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`;window.print()}
+// ---------- données, sauvegarde, import ----------
+V.data=()=>`${head('data')}
+<div class="card"><h3>Nom de l’établissement</h3><div class="row"><input id="sn" value="${esc(S.school)}" placeholder="Apparaît sur les rapports"><button class="pri" onclick="saveSchool()">Enregistrer</button></div></div>
+<div class="card"><h3>Sauvegarde et restauration</h3><div class="row"><button class="pri" onclick="expJson()">⬇ Sauvegarde JSON</button><button onclick="$('#jf').click()">⬆ Restaurer un JSON</button><button onclick="expFull()">⬇ Export complet Excel</button><button onclick="restoreAuto()">Restaurer la sauvegarde automatique</button></div><p class="mu" style="margin:0">Une sauvegarde automatique est faite chaque jour dans le navigateur. Vous pouvez déposer le fichier JSON dans votre dépôt GitHub.</p></div>
+<div class="card"><h3>Importer des élèves depuis Excel</h3><div class="row"><button class="pri" onclick="$('#xf').click()">⬆ Choisir un fichier .xlsx / .xls</button><button onclick="tpl()">⬇ Modèle d’import</button></div><div id="imp">${IM?impHtml():''}</div></div>`;
+async function saveSchool(){S.school=$('#sn').value.trim();await put('meta',{k:'school',v:S.school});toast()}
+const dl=(name,blob)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()};
+const expJson=()=>dl(`sauvegarde_${td()}.json`,new Blob([JSON.stringify(dump())],{type:'application/json'}));
+$('#jf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const o=JSON.parse(await f.text());if(!o.students)throw 0;if(await dlg('Les données actuelles seront remplacées. Continuer ?',[],'Restaurer'))await restore(o)}catch{alert('Fichier invalide')}};
+async function restoreAuto(){const m=await P(st('meta').get('auto'));if(!m)return alert('Aucune sauvegarde automatique');if(await dlg('Restaurer la sauvegarde du '+m.d+' ?',[],'Restaurer'))await restore(m.data)}
+function expFull(){const wb=XLSX.utils.book_new(),add=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(a),n);add('Classes',S.classes);add('Students',S.students);add('Attendance',[...AM.values()]);XLSX.writeFile(wb,`export_complet_${td()}.xlsx`)}
+function tpl(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Nom','Classe'],['','']]),'Modèle');XLSX.writeFile(wb,'modele_import_eleves.xlsx')}
+$('#xf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const wb=XLSX.read(await f.arrayBuffer());IM={sheets:wb.SheetNames.map(n=>({n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()))})).filter(s=>s.rows.length>1)};const h=IM.sheets[0]?IM.sheets[0].rows[0].map(String):[];IM.nc=Math.max(0,h.findIndex(x=>/nom|name|élève|eleve|اسم/i.test(x)));IM.cc=h.findIndex(x=>/classe|class|niveau|قسم|فصل/i.test(x));render()};
+function impRows(){const nrm=s=>String(s).trim().replace(/\s+/g,' ');const out=[];for(const s of IM.sheets)for(const r of s.rows.slice(1)){const name=nrm(r[IM.nc]||''),cn=nrm(IM.cc>=0?r[IM.cc]:s.n);if(!name||!cn)continue;const c=S.classes.find(c=>c.name===cn);out.push({name,cn,dup:!!c&&S.students.some(x=>x.cid===c.id&&x.name===name)||out.some(o=>o.cn===cn&&o.name===name)})}return out}
+function impHtml(){if(!IM.sheets.length)return'<p>Fichier vide.</p>';const h=IM.sheets[0].rows[0],o=h.map((x,i)=>`<option value="${i}">${esc(x||'Colonne '+(i+1))}</option>`).join(''),rows=impRows();
+return`<div class="row"><label>Colonne du nom <select onchange="IM.nc=+this.value;render()">${o.replace(`value="${IM.nc}"`,`value="${IM.nc}" selected`)}</select></label><label>Colonne de la classe <select onchange="IM.cc=+this.value;render()"><option value="-1" ${IM.cc<0?'selected':''}>Nom de la feuille</option>${o.replace(`value="${IM.cc}"`,`value="${IM.cc}" selected`)}</select></label></div>
+<p>Nouveaux : <b>${rows.filter(r=>!r.dup).length}</b> · Doublons (ignorés, historique conservé) : <b>${rows.filter(r=>r.dup).length}</b></p><div class="wrap" style="max-height:260px;overflow:auto"><table><tr><th>Classe</th><th>Nom</th><th>Statut</th></tr>${rows.slice(0,100).map(r=>`<tr><td>${esc(r.cn)}</td><td class="l">${esc(r.name)}</td><td>${r.dup?'Doublon':'Nouveau'}</td></tr>`).join('')}</table></div><div class="row" style="margin-top:12px"><button class="pri" onclick="confirmImport()">Confirmer l’import</button><button onclick="IM=null;render()">Annuler</button></div>`}
+async function confirmImport(){let n=0;for(const r of impRows().filter(r=>!r.dup)){let c=S.classes.find(c=>c.name===r.cn);if(!c){const id=await put('classes',{name:r.cn});c={id,name:r.cn};S.classes.push(c)}const s={sid:nextSid(),name:r.name,cid:c.id},id=await put('students',s);S.students.push({...s,id});n++}IM=null;await load();alert(n+' élève(s) importé(s)');render()}
+(async()=>{await open();await load();await autoBackup();render();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
+let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#inst').hidden=false});
+</script>
+</body>
+</html>
