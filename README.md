@@ -26,3 +26,5 @@ Modifiez `index.html`, puis changez `VERSION` dans `sw.js`.
 
 ## Sauvegarde GitHub (optionnelle)
 Données et sauvegarde → « Sauvegarde GitHub ». Créez un dépôt **privé** séparé et un token *fine-grained* limité à ce dépôt, permission **Contents : Read and write**. Le token est saisi dans l’application et stocké uniquement dans le navigateur ; il n’est jamais dans le code ni dans les fichiers JSON. Utilisez un appareil de confiance et effacez le token au besoin (bouton « Effacer le token »).
+
+Chaque sauvegarde GitHub crée un fichier `sauvegarde-AAAA-MM-JJ_HH-MM.json` dans le dossier choisi (par défaut `backups`). La restauration propose la liste des dates.

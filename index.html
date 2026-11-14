@@ -137,9 +137,9 @@ function expPdf(){const b=build();$('#print').innerHTML=`<h2 style="text-align:c
 V.data=()=>`${head('data')}
 <div class="card"><h3>Nom de l’établissement</h3><div class="row"><input id="sn" value="${esc(S.school)}" placeholder="Apparaît sur les rapports"><button class="pri" onclick="saveSchool()">Enregistrer</button></div></div>
 <div class="card"><h3>Sauvegarde et restauration</h3><div class="row"><button class="pri" onclick="expJson()">⬇ Sauvegarde JSON</button><button onclick="$('#jf').click()">⬆ Restaurer un JSON</button><button onclick="expFull()">⬇ Export complet Excel</button><button onclick="restoreAuto()">Restaurer la sauvegarde automatique</button></div><p class="mu" style="margin:0">Une sauvegarde automatique est faite chaque jour dans le navigateur. Vous pouvez déposer le fichier JSON dans votre dépôt GitHub.</p></div>
-<div class="card"><h3>Sauvegarde GitHub</h3><p class="mu" style="margin:0 0 12px">Envoie un fichier JSON dans un dépôt GitHub. Le token est saisi ici, gardé uniquement dans ce navigateur et jamais écrit dans le code ni dans les sauvegardes.</p>
+<div class="card"><h3>Sauvegarde GitHub</h3><p class="mu" style="margin:0 0 12px">Chaque sauvegarde crée un nouveau fichier daté (sauvegarde-AAAA-MM-JJ_HH-MM.json) dans le dossier choisi ; à la restauration, vous choisissez la date. Le token est saisi ici, gardé uniquement dans ce navigateur et jamais écrit dans le code ni dans les sauvegardes.</p>
 <div class="row"><input id="go" placeholder="Utilisateur GitHub" value="${esc(GH.owner)}"><input id="gr" placeholder="Dépôt (ex. sauvegardes-ecole)" value="${esc(GH.repo)}"><input id="gb" placeholder="Branche" style="width:110px" value="${esc(GH.branch)}"></div>
-<div class="row"><input id="gp" placeholder="Chemin du fichier" style="min-width:250px" value="${esc(GH.path)}"><input id="gt" type="password" autocomplete="off" style="min-width:250px" placeholder="${GH.token?'Token enregistré (vide = le garder)':'Token d’accès personnel'}"></div>
+<div class="row"><input id="gp" placeholder="Dossier des sauvegardes (ex. backups)" style="min-width:250px" value="${esc(GH.path)}"><input id="gt" type="password" autocomplete="off" style="min-width:250px" placeholder="${GH.token?'Token enregistré (vide = le garder)':'Token d’accès personnel'}"></div>
 <label class="row"><input type="checkbox" id="ga" style="width:auto" ${GH.auto?'checked':''}> Sauvegarde automatique une fois par jour à l’ouverture</label>
 <div class="row"><button class="pri" onclick="ghSave()">Enregistrer les réglages</button><button onclick="ghPush()">⬆ Sauvegarder maintenant</button><button onclick="ghPull()">⬇ Restaurer depuis GitHub</button><button class="dg" onclick="ghClear()">Effacer le token</button></div><p id="ghm" style="margin:0 0 8px;font-weight:500"></p>
 <details><summary style="cursor:pointer;font-weight:600">Comment créer le token ?</summary><ol class="mu"><li>Créez un dépôt <b>privé</b> dédié aux sauvegardes (les noms d’élèves sont des données personnelles).</li><li>GitHub → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token.</li><li>Repository access : <b>Only select repositories</b>, choisissez ce dépôt uniquement.</li><li>Permissions → Repository permissions → <b>Contents : Read and write</b>. Choisissez une date d’expiration.</li><li>Copiez le token et collez-le ci-dessus. Chaque envoi crée une version dans l’historique Git.</li></ol></details></div>
@@ -159,27 +159,32 @@ return`<div class="row"><label>Colonne du nom <select onchange="IM.nc=+this.valu
 async function confirmImport(){let n=0;for(const r of impRows().filter(r=>!r.dup)){let c=S.classes.find(c=>c.name===r.cn);if(!c){const id=await put('classes',{name:r.cn});c={id,name:r.cn};S.classes.push(c)}const s={sid:nextSid(),name:r.name,cid:c.id},id=await put('students',s);S.students.push({...s,id});n++}IM=null;await load();alert(n+' élève(s) importé(s)');render()}
 
 // ---------- sauvegarde GitHub (token saisi par l’utilisateur, jamais dans le code) ----------
-let GH={owner:'',repo:'',branch:'main',path:'backups/sauvegarde.json',token:'',auto:false};
+let GH={owner:'',repo:'',branch:'main',path:'backups',token:'',auto:false};
 const ghMsg=(t,e)=>{const x=$('#ghm');if(x){x.textContent=t;x.style.color=e?'var(--no)':'var(--ok)'}};
-async function ghLoad(){const m=await P(st('meta').get('gh'));if(m)GH=m.v}
-async function ghRead(){if(!$('#go'))return;GH={owner:$('#go').value.trim(),repo:$('#gr').value.trim(),branch:$('#gb').value.trim()||'main',path:$('#gp').value.trim()||'backups/sauvegarde.json',token:$('#gt').value.trim()||GH.token,auto:$('#ga').checked};await put('meta',{k:'gh',v:GH})}
+async function ghLoad(){const m=await P(st('meta').get('gh'));if(m){GH=m.v;GH.path=(GH.path||'').replace(/\/?[^\/]*\.json$/,'')||'backups'}}
+async function ghRead(){if(!$('#go'))return;GH={owner:$('#go').value.trim(),repo:$('#gr').value.trim(),branch:$('#gb').value.trim()||'main',path:$('#gp').value.trim().replace(/^\/+|\/+$/g,'')||'backups',token:$('#gt').value.trim()||GH.token,auto:$('#ga').checked};await put('meta',{k:'gh',v:GH})}
 async function ghSave(){await ghRead();toast();render()}
 async function ghClear(){GH.token='';GH.auto=false;await put('meta',{k:'gh',v:GH});render()}
-const ghU=()=>`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path.split('/').map(encodeURIComponent).join('/')}`;
+const ghU=p=>`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${p.split('/').map(encodeURIComponent).join('/')}`;
+const ghQ=()=>'?ref='+encodeURIComponent(GH.branch)+'&_='+Date.now();
+const ghNow=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return td()+'_'+p(d.getHours())+'-'+p(d.getMinutes())};
+const pick=(title,items)=>new Promise(res=>{const d=$('#dlg');d.innerHTML=`<form method="dialog"><h3>${title}</h3><div style="display:grid;gap:6px;max-height:50vh;overflow:auto">${items.map(n=>`<button value="${esc(n)}">${esc(n)}</button>`).join('')}</div><div class="row" style="margin:14px 0 0;justify-content:flex-end"><button value="x">Annuler</button></div></form>`;d.returnValue='x';d.onclose=()=>res(d.returnValue==='x'?null:d.returnValue);d.showModal()});
 const ghH=raw=>({Authorization:'Bearer '+GH.token,Accept:raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'});
 const ghErr=async r=>{try{return r.status+' – '+(await r.json()).message}catch{return String(r.status)}};
 const ghFail=e=>e instanceof TypeError?'Réseau indisponible, ou fonction bloquée dans cet aperçu : utilisez votre site GitHub Pages.':e.message;
 const ghOk=()=>GH.token&&GH.owner&&GH.repo;
 async function ghPush(){await ghRead();if(!ghOk())return ghMsg('Renseignez utilisateur, dépôt et token.',1);ghMsg('Envoi en cours…');
-try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(dump()))));let r;
-for(let i=0;i<2;i++){const g=await fetch(ghU()+'?ref='+encodeURIComponent(GH.branch)+'&_='+Date.now(),{headers:ghH(),cache:'no-store'});let sha;if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw new Error(await ghErr(g));
-const body={message:'Sauvegarde '+new Date().toISOString(),content,branch:GH.branch};if(sha)body.sha=sha;
-r=await fetch(ghU(),{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.status!==409&&r.status!==422)break}
-if(!r.ok)throw new Error(await ghErr(r));
-await put('meta',{k:'ghlast',d:td()});ghMsg('Sauvegarde envoyée ✓ '+new Date().toLocaleString('fr-FR'))}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
-async function ghPull(){await ghRead();if(!ghOk())return ghMsg('Renseignez utilisateur, dépôt et token.',1);ghMsg('Téléchargement…');
-try{const r=await fetch(ghU()+'?ref='+encodeURIComponent(GH.branch)+'&_='+Date.now(),{headers:ghH(1),cache:'no-store'});if(!r.ok)throw new Error(await ghErr(r));const o=JSON.parse(await r.text());if(!o.students)throw new Error('Fichier de sauvegarde invalide');
-if(await dlg('Remplacer les données actuelles par la sauvegarde GitHub ?',[],'Restaurer')){await restore(o);ghMsg('Données restaurées ✓')}else ghMsg('')}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
+try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(dump())))),path=GH.path+'/sauvegarde-'+ghNow()+'.json';let r;
+for(let i=0;i<2;i++){let sha;if(i){const g=await fetch(ghU(path)+ghQ(),{headers:ghH(),cache:'no-store'});if(g.ok)sha=(await g.json()).sha}
+const body={message:'Sauvegarde '+ghNow(),content,branch:GH.branch};if(sha)body.sha=sha;
+r=await fetch(ghU(path),{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.status!==409&&r.status!==422)break}
+if(!r.ok)throw new Error(await ghErr(r));await put('meta',{k:'ghlast',d:td()});ghMsg('Sauvegarde envoyée ✓ '+path)}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
+async function ghPull(){await ghRead();if(!ghOk())return ghMsg('Renseignez utilisateur, dépôt et token.',1);ghMsg('Recherche des sauvegardes…');
+try{const r=await fetch(ghU(GH.path)+ghQ(),{headers:ghH(),cache:'no-store'});if(!r.ok)throw new Error(await ghErr(r));
+const names=(await r.json()).filter(f=>/^sauvegarde.*\.json$/.test(f.name)).map(f=>f.name).sort().reverse();if(!names.length)throw new Error('Aucune sauvegarde trouvée dans ce dossier');ghMsg('');
+const n=await pick('Choisir la sauvegarde (la plus récente en haut)',names);if(!n)return;
+const f=await fetch(ghU(GH.path+'/'+n)+ghQ(),{headers:ghH(1),cache:'no-store'});if(!f.ok)throw new Error(await ghErr(f));const o=JSON.parse(await f.text());if(!o.students)throw new Error('Fichier de sauvegarde invalide');
+if(await dlg('Remplacer les données actuelles par « '+n+' » ?',[],'Restaurer')){await restore(o);ghMsg('Données restaurées ✓')}}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
 async function ghAuto(){const l=await P(st('meta').get('ghlast'));if(GH.auto&&ghOk()&&navigator.onLine&&S.students.length&&(!l||l.d!==td()))ghPush()}
 (async()=>{await open();await load();await ghLoad();await autoBackup();render();ghAuto();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
 let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#inst').hidden=false});
