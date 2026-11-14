@@ -171,12 +171,14 @@ const ghErr=async r=>{try{return r.status+' – '+(await r.json()).message}catch
 const ghFail=e=>e instanceof TypeError?'Réseau indisponible, ou fonction bloquée dans cet aperçu : utilisez votre site GitHub Pages.':e.message;
 const ghOk=()=>GH.token&&GH.owner&&GH.repo;
 async function ghPush(){await ghRead();if(!ghOk())return ghMsg('Renseignez utilisateur, dépôt et token.',1);ghMsg('Envoi en cours…');
-try{const q='?ref='+encodeURIComponent(GH.branch);let sha;const g=await fetch(ghU()+q,{headers:ghH()});if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw new Error(await ghErr(g));
-const body={message:'Sauvegarde '+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(dump())))),branch:GH.branch};if(sha)body.sha=sha;
-const r=await fetch(ghU(),{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(await ghErr(r));
+try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(dump()))));let r;
+for(let i=0;i<2;i++){const g=await fetch(ghU()+'?ref='+encodeURIComponent(GH.branch)+'&_='+Date.now(),{headers:ghH(),cache:'no-store'});let sha;if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw new Error(await ghErr(g));
+const body={message:'Sauvegarde '+new Date().toISOString(),content,branch:GH.branch};if(sha)body.sha=sha;
+r=await fetch(ghU(),{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.status!==409&&r.status!==422)break}
+if(!r.ok)throw new Error(await ghErr(r));
 await put('meta',{k:'ghlast',d:td()});ghMsg('Sauvegarde envoyée ✓ '+new Date().toLocaleString('fr-FR'))}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
 async function ghPull(){await ghRead();if(!ghOk())return ghMsg('Renseignez utilisateur, dépôt et token.',1);ghMsg('Téléchargement…');
-try{const r=await fetch(ghU()+'?ref='+encodeURIComponent(GH.branch),{headers:ghH(1)});if(!r.ok)throw new Error(await ghErr(r));const o=JSON.parse(await r.text());if(!o.students)throw new Error('Fichier de sauvegarde invalide');
+try{const r=await fetch(ghU()+'?ref='+encodeURIComponent(GH.branch)+'&_='+Date.now(),{headers:ghH(1),cache:'no-store'});if(!r.ok)throw new Error(await ghErr(r));const o=JSON.parse(await r.text());if(!o.students)throw new Error('Fichier de sauvegarde invalide');
 if(await dlg('Remplacer les données actuelles par la sauvegarde GitHub ?',[],'Restaurer')){await restore(o);ghMsg('Données restaurées ✓')}else ghMsg('')}catch(e){ghMsg('Échec : '+ghFail(e),1)}}
 async function ghAuto(){const l=await P(st('meta').get('ghlast'));if(GH.auto&&ghOk()&&navigator.onLine&&S.students.length&&(!l||l.d!==td()))ghPush()}
 (async()=>{await open();await load();await ghLoad();await autoBackup();render();ghAuto();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
