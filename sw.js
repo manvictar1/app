@@ -1,5 +1,5 @@
 // Incrémentez VERSION à chaque mise à jour.
-const VERSION='absences-v4',CORE=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
+const VERSION='absences-v5',CORE=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 const save=(rq,r)=>{const cp=r.clone();caches.open(VERSION).then(c=>c.put(rq,cp));return r};
 self.addEventListener('install',e=>e.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==VERSION).map(x=>caches.delete(x)))).then(()=>clients.claim())));
