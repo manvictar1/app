@@ -70,7 +70,7 @@ body{display:block;padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 aside{position:sticky;top:0;z-index:30;width:100%;height:auto;display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px 14px;border-radius:0 0 20px 20px}
 aside .logo{margin:0;flex:1;font-size:14px}aside .logo i{width:32px;height:32px;font-size:16px}
 aside>button{margin:0!important;width:auto!important;padding:7px 11px;font-size:12px;min-height:0;border-radius:20px}
-#syn{display:none}#sbtn .st{display:none}
+#syn{display:none}aside .st{display:none}aside .lc{display:inline;font-weight:700}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:space-around;gap:2px;background:color-mix(in srgb,var(--card) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--bd);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));overflow-x:auto}
 nav button{flex:1 0 auto;min-width:62px;flex-direction:column;gap:2px;align-items:center;text-align:center;color:var(--mu);font-size:10.5px;padding:6px;border-radius:14px;margin:0;min-height:0}
 nav button:hover{background:none;color:var(--mu)}nav button i{background:none;font-size:22px;width:auto;height:auto}
@@ -86,6 +86,14 @@ dialog{margin:auto 0 0;width:100%;max-width:100%;border-radius:24px 24px 0 0;pad
 #toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .hero{padding:18px}.hero h2{font-size:22px}
 }
+.syi .ic{position:relative;display:inline-block;font-size:17px}
+.syi .ic::after{content:'';position:absolute;top:-2px;inset-inline-end:-5px;width:10px;height:10px;border-radius:50%;border:2px solid #141b34;background:transparent}
+.syi.ok .ic::after{background:#22c55e}.syi.dirty .ic::after{background:#f59e0b}.syi.err .ic::after{background:#ef4444}.syi.idle .ic::after{background:#8e98b8}
+.syi.off{opacity:.55}.syi.off .ic{filter:grayscale(1)}
+.syi.busy .ic{animation:spin 1s linear infinite}.syi.busy .ic::after{display:none}@keyframes spin{to{transform:rotate(360deg)}}
+.lc{display:none}
+@media (max-width:1100px),(hover:none) and (pointer:coarse){aside>button{min-width:44px;min-height:40px!important;flex:none}}
+@media (max-width:480px){aside .logo span{display:none}}
 </style>
 </head>
 <body>
@@ -96,7 +104,7 @@ dialog{margin:auto 0 0;width:100%;max-width:100%;border-radius:24px 24px 0 0;pad
 <button data-v="stu" onclick="go('stu')"><i>👤</i><span class="lg">Fiche élève</span><span class="sh">Fiche</span></button>
 <button data-v="can" onclick="go('can')"><i>🍽</i><span class="lg">Cantine</span><span class="sh">Cantine</span></button>
 <button data-v="rep" onclick="go('rep')"><i>📄</i><span class="lg">Rapports</span><span class="sh">Rapports</span></button>
-<button data-v="data" onclick="go('data')"><i>💾</i><span class="lg">Données et sauvegarde</span><span class="sh">Données</span></button></nav><button id="sbtn" onclick="srch()" style="margin-top:14px;width:100%;text-align:start;background:transparent;color:#cfd6ea;border-color:#34406a">🔍 <span class="st">Rechercher un élève</span></button><button id="inst" class="pri" hidden onclick="ip.prompt()" style="margin-top:14px;width:100%">📲 Installer l’application</button><button onclick="setLang(LANG==='ar'?'fr':'ar')" style="margin-top:10px;width:100%;background:transparent;color:#cfd6ea;border-color:#34406a">🌐 العربية / Français</button><div id="syn" style="font-size:11px;color:#8e98b8;margin-top:10px;word-break:break-word"></div></aside>
+<button data-v="data" onclick="go('data')"><i>💾</i><span class="lg">Données et sauvegarde</span><span class="sh">Données</span></button></nav><button id="sbtn" onclick="srch()" style="margin-top:14px;width:100%;text-align:start;background:transparent;color:#cfd6ea;border-color:#34406a">🔍 <span class="st">Rechercher un élève</span></button><button id="syi" class="syi off" onclick="syncClick()" style="margin-top:8px;width:100%;text-align:start;background:transparent;color:#cfd6ea;border-color:#34406a"><span class="ic">☁️</span> <span class="st">Synchronisation</span></button><button id="inst" class="pri" hidden onclick="ip.prompt()" style="margin-top:14px;width:100%">📲 Installer l’application</button><button onclick="setLang(LANG==='ar'?'fr':'ar')" style="margin-top:10px;width:100%;background:transparent;color:#cfd6ea;border-color:#34406a">🌐 <span class="st">العربية / Français</span><span class="lc" id="lc"></span></button><div id="syn" style="font-size:11px;color:#8e98b8;margin-top:10px;word-break:break-word"></div></aside>
 <main id="app"></main>
 <dialog id="dlg"></dialog><div id="toast">Enregistré ✓</div><div id="print"></div>
 <input type="file" id="xf" accept=".xlsx,.xls" hidden><input type="file" id="jf" accept=".json" hidden><input type="file" id="hf" accept=".xlsx,.xls" hidden><input type="file" id="lf" accept="image/*" hidden>
@@ -113,6 +121,8 @@ Object.assign(AR,{"Affichage de l’appel": "عرض التسجيل", "Affichage 
 Object.assign(AR,{"Cantine": "المطعم المدرسي", "Repas et inscriptions à la cantine": "الوجبات والتسجيل في المطعم", "Inscrits :": "المسجلون :", "Repas du jour :": "وجبات اليوم :", "Absents :": "الغائبون :", "Repas pris": "وجبة مأخوذة", "Absent (matin)": "غائب (الصباح)", "Pas de cantine ce jour (week-end, jour férié ou jour non coché).": "لا مطعم في هذا اليوم (نهاية أسبوع أو عطلة أو يوم غير محدد).", "Jours de cantine": "أيام المطعم", "Absences cantine": "غيابات المطعم", "Montant (DH)": "المبلغ (درهم)", "Récapitulatif du mois": "ملخص الشهر", "Aucun élève inscrit à la cantine. Cochez 🍽 dans « Classes et élèves ».": "لا يوجد تلاميذ مسجلون في المطعم. حدد 🍽 في «الأقسام والتلاميذ».", "Réglages de la cantine": "إعدادات المطعم", "Activer l’onglet Cantine": "تفعيل تبويب المطعم", "Jours de cantine :": "أيام المطعم :", "Prix du repas (DH)": "ثمن الوجبة (درهم)", "Considérer absent à la cantine si absent le matin": "اعتبار التلميذ غائبا عن المطعم إذا غاب صباحا", "Matin (info)": "الصباح (معلومة)", "Repas": "الوجبة"});
 Object.assign(AR,{"Accueil": "الرئيسية", "Appel": "التسجيل", "Fiche": "البطاقة", "Données": "البيانات", "Faire l’appel": "تسجيل الحضور"});
 Object.assign(AR,{"Rechercher un élève": "بحث عن تلميذ", "Nom, numéro ou classe": "الاسم أو الرقم أو القسم", "Tapez pour chercher dans toutes les classes.": "اكتب للبحث في كل الأقسام.", "Aucun résultat.": "لا توجد نتائج.", "Fermer": "إغلاق"});
+Object.assign(AR,{"Synchronisation": "المزامنة", "Synchronisation désactivée : configurez GitHub dans Données et sauvegarde": "المزامنة معطلة: اضبط GitHub في «البيانات والنسخ الاحتياطي»", "Synchronisation en cours…": "المزامنة جارية…", "Échec de la synchronisation — touchez pour réessayer": "فشلت المزامنة — المس للمحاولة مجددا", "Modifications en attente d’envoi — touchez pour synchroniser": "تعديلات في انتظار الإرسال — المس للمزامنة", "Synchronisé — touchez pour resynchroniser": "تمت المزامنة — المس لإعادة المزامنة", "Touchez pour synchroniser": "المس للمزامنة"});
+Object.assign(AR,{"Application": "التطبيق", "Mettre à jour l’application": "تحديث التطبيق", "Si une nouvelle fonction n’apparaît pas, touchez « Mettre à jour ». Vos données ne sont pas supprimées.": "إذا لم تظهر ميزة جديدة، المس «تحديث التطبيق». بياناتك لا تُحذف.", "Version": "الإصدار"});
 const PRE=[['Élèves · ','التلاميذ · ']];
 const T=s=>LANG==='ar'?(AR[s]||s):s;
 function trs(v){const m=v.match(/^([^A-Za-zÀ-ÿ0-9]*)([\s\S]*?)(\s*)$/);if(!m||!m[2])return v;let r=AR[m[2]];if(!r)for(const[k,x]of PRE)if(m[2].startsWith(k)){r=x+m[2].slice(k.length);break}return r?m[1]+r+m[3]:v}
@@ -136,7 +146,7 @@ async function autoBackup(){const m=await P(st('meta').get('auto'));if(S.student
 // ---------- aides UI ----------
 function dlg(title,fields=[],ok='Enregistrer'){return new Promise(res=>{const d=$('#dlg');d.innerHTML=`<form method="dialog"><h3>${title}</h3>${fields.map((f,i)=>`<label>${f[0]}<input id="f${i}" value="${esc(f[1]||'')}"></label>`).join('')}<div class="row" style="margin:16px 0 0;justify-content:flex-end"><button value="x">Annuler</button><button value="ok" class="pri">${ok}</button></div></form>`;d.onclose=()=>res(d.returnValue==='ok'?fields.map((_,i)=>$('#f'+i).value.trim()):null);tr(d);d.showModal()})}
 const go=v=>{view=v;render();const a=$('#app');a.classList.remove('fx');void a.offsetWidth;a.classList.add('fx')};
-function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));$('#app').innerHTML=V[view]();tr($('#app'));if(view==='dash')drawChart()}
+function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));$('#app').innerHTML=V[view]();tr($('#app'));syIcon();if(view==='dash')drawChart()}
 const cname=id=>(S.classes.find(c=>c.id==id)||{}).name||'';
 const sorted=a=>[...a].sort((x,y)=>x.name.localeCompare(y.name,'fr'));
 const opts=(sel,withAll)=>(withAll?`<option value="">Toutes les classes</option>`:'')+S.classes.map(c=>`<option value="${c.id}" ${c.id==sel?'selected':''}>${esc(c.name)}</option>`).join('');
@@ -194,7 +204,7 @@ function expPrint(){const b=build();$('#print').innerHTML=`<h2 style="text-align
 // ---------- données, sauvegarde, import ----------
 V.data=()=>`${head('data')}
 <div class="card"><h3>Nom de l’établissement</h3><div class="row"><input id="sn" value="${esc(S.school)}" placeholder="Apparaît sur les rapports"><button class="pri" onclick="saveSchool()">Enregistrer</button></div><div class="row"><button onclick="$('#lf').click()">🖼 Choisir le logo</button>${LOGO?`<img src="${LOGO}" style="height:40px;border-radius:6px"><button class="dg" onclick="LOGO='';put('meta',{k:'logo',v:''});render()">Retirer</button>`:''}</div></div>
-${cfgCard()}${canCfgCard()}${calCard()}<div class="card"><h3>Sauvegarde et restauration</h3><div class="row"><button class="pri" onclick="expJson()">⬇ Sauvegarde JSON</button><button onclick="$('#jf').click()">⬆ Restaurer un JSON</button><button onclick="expFull()">⬇ Export complet Excel</button><button onclick="restoreAuto()">Restaurer la sauvegarde automatique</button></div><p class="mu" style="margin:0">Une sauvegarde automatique est faite chaque jour dans le navigateur. Vous pouvez déposer le fichier JSON dans votre dépôt GitHub.</p></div>
+${appCard()}${cfgCard()}${canCfgCard()}${calCard()}<div class="card"><h3>Sauvegarde et restauration</h3><div class="row"><button class="pri" onclick="expJson()">⬇ Sauvegarde JSON</button><button onclick="$('#jf').click()">⬆ Restaurer un JSON</button><button onclick="expFull()">⬇ Export complet Excel</button><button onclick="restoreAuto()">Restaurer la sauvegarde automatique</button></div><p class="mu" style="margin:0">Une sauvegarde automatique est faite chaque jour dans le navigateur. Vous pouvez déposer le fichier JSON dans votre dépôt GitHub.</p></div>
 <div class="card"><h3>Sauvegarde GitHub</h3><p class="mu" style="margin:0 0 12px">Chaque sauvegarde crée un nouveau fichier daté (sauvegarde-AAAA-MM-JJ_HH-MM.json) dans le dossier choisi ; à la restauration, vous choisissez la date. Le token est saisi ici, gardé uniquement dans ce navigateur et jamais écrit dans le code ni dans les sauvegardes.</p>
 <div class="row"><input id="go" placeholder="Utilisateur GitHub" value="${esc(GH.owner)}"><input id="gr" placeholder="Dépôt (ex. sauvegardes-ecole)" value="${esc(GH.repo)}"><input id="gb" placeholder="Branche" style="width:110px" value="${esc(GH.branch)}"></div>
 <div class="row"><input id="gp" placeholder="Dossier des sauvegardes (ex. backups)" style="min-width:250px" value="${esc(GH.path)}"><input id="gt" type="password" autocomplete="off" style="min-width:250px" placeholder="${GH.token?'Token enregistré (vide = le garder)':'Token d’accès personnel'}"></div>
@@ -218,7 +228,7 @@ async function confirmImport(){let n=0;for(const r of impRows().filter(r=>!r.dup
 
 // ---------- sauvegarde GitHub (token saisi par l’utilisateur, jamais dans le code) ----------
 let GH={owner:'',repo:'',branch:'main',path:'backups',token:'',auto:true};
-const ghMsg=(t,e)=>{const x=$('#ghm');if(x){x.textContent=t;x.style.color=e?'var(--no)':'var(--ok)'}const y=$('#syn');if(y&&t)y.textContent=(e?'⚠️ ':'☁️ ')+t.slice(0,48)};
+const ghMsg=(t,e)=>{const x=$('#ghm');if(x){x.textContent=t;x.style.color=e?'var(--no)':'var(--ok)'}const y=$('#syn');if(y&&t)y.textContent=(e?'⚠️ ':'☁️ ')+t.slice(0,48);syIcon(t,e)};
 async function ghLoad(){const m=await P(st('meta').get('gh'));if(m){GH=m.v;GH.path=(GH.path||'').replace(/\/?[^\/]*\.json$/,'')||'backups'}}
 async function ghRead(){if(!$('#go'))return;GH={owner:$('#go').value.trim(),repo:$('#gr').value.trim(),branch:$('#gb').value.trim()||'main',path:$('#gp').value.trim().replace(/^\/+|\/+$/g,'')||'backups',token:$('#gt').value.trim()||GH.token,auto:$('#ga').checked};await put('meta',{k:'gh',v:GH})}
 async function ghSave(){await ghRead();toast();render()}
@@ -316,7 +326,7 @@ async function cfgSet(k,v){CFG[k]=k==='auto'?v:(v||CFG[k]);await put('meta',{k:'
 setInterval(()=>{if(view==='att'&&!$('#dlg').open&&JSON.stringify(visNow())!==VK)render()},30000);
 // ---------- synchronisation GitHub automatique ----------
 let DIRTY=false,SYNCING=false,DEV='';try{DEV=localStorage.getItem('dev');if(!DEV){DEV=Math.random().toString(36).slice(2,6);localStorage.setItem('dev',DEV)}DIRTY=localStorage.getItem('dirty')==='1'}catch{}if(!DEV)DEV='x'+Math.random().toString(36).slice(2,5);
-function markDirty(){DIRTY=true;try{localStorage.setItem('dirty','1')}catch{}clearTimeout(markDirty.t);markDirty.t=setTimeout(()=>autoSync(),15000)}
+function markDirty(){DIRTY=true;try{localStorage.setItem('dirty','1')}catch{}clearTimeout(markDirty.t);markDirty.t=setTimeout(()=>autoSync(),15000);syIcon()}
 const busyUI=()=>{const a=document.activeElement;return(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName)&&a.closest('#app'))||$('#dlg').open};
 const sig=o=>{let n=0,t=0;for(const k of['classes','students','att'])for(const r of o[k]||[]){n++;t=(t+(r.u||0)%1000003)%1e9}return n+':'+t+':'+(o.tomb||[]).length+':'+JSON.stringify(o.cal||{}).length};
 async function autoSync(){if(SYNCING||!GH.auto||!ghOk()||!navigator.onLine)return;SYNCING=true;try{await ghSync()}finally{SYNCING=false}}
@@ -347,7 +357,18 @@ function srch(){$('#dlg').innerHTML=`<h3>Rechercher un élève</h3><input id="sq
 function srchRes(){const q=nrm($('#sq').value),L=q?S.students.filter(s=>nrm(s.name).includes(q)||nrm(s.sid).includes(q)||nrm(cname(s.cid)).includes(q)):[];
 $('#sr').innerHTML=!q?'<p class="mu">Tapez pour chercher dans toutes les classes.</p>':L.length?sorted(L).slice(0,50).map(s=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap;border-bottom:1px solid var(--bd);padding:6px 0;margin:0"><div><b>${esc(s.name)}</b><div class="mu">${esc(cname(s.cid))} · ${s.sid}</div></div><div class="row" style="margin:0;flex-wrap:nowrap"><button title="Fiche élève" onclick="$('#dlg').close();openStu(${s.id})">📋</button><button title="Appel quotidien" onclick="$('#dlg').close();cur.cls=${s.cid};go('att')">✅</button></div></div>`).join(''):'<p class="mu">Aucun résultat.</p>';tr($('#sr'))}
 addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)&&!$('#dlg').open){e.preventDefault();srch()}});
-(async()=>{await open();await load();await ghLoad();await autoBackup();applyCan();render();tr($('aside'));tr($('#toast'));autoSync();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
+// ---------- icône de synchronisation ----------
+let SYS='',SYT='';
+function syIcon(t,e){if(t!==undefined){SYT=t;if(e)SYS='err';else if(/…$/.test(t))SYS='busy';else if(/^(Synchronisation terminée|Synchronisé|Sauvegarde envoyée|Données restaurées)/.test(t))SYS='ok'}
+const b=$('#syi');if(!b)return;const off=!(GH.auto&&ghOk()),st=off?'off':SYS==='busy'?'busy':SYS==='err'?'err':DIRTY?'dirty':SYS==='ok'?'ok':'idle';
+b.className='syi '+st;b.querySelector('.ic').textContent=st==='busy'?'🔄':'☁️';
+b.title=T(off?'Synchronisation désactivée : configurez GitHub dans Données et sauvegarde':st==='busy'?'Synchronisation en cours…':st==='err'?'Échec de la synchronisation — touchez pour réessayer':st==='dirty'?'Modifications en attente d’envoi — touchez pour synchroniser':st==='ok'?'Synchronisé — touchez pour resynchroniser':'Touchez pour synchroniser')+(st==='ok'&&SYT?' · '+SYT:'')}
+function syncClick(){if(!(GH.auto&&ghOk()))return go('data');if(SYS!=='busy')ghSync(1)}
+// ---------- version et mise à jour forcée ----------
+const APP_V='v13';
+const appCard=()=>`<div class="card"><h3>Application</h3><p class="mu" style="margin:0 0 10px">Version <b>${APP_V}</b></p><p class="mu" style="margin:0 0 10px">Si une nouvelle fonction n’apparaît pas, touchez « Mettre à jour ». Vos données ne sont pas supprimées.</p><button class="pri" onclick="forceUpdate()">🔄 Mettre à jour l’application</button></div>`;
+async function forceUpdate(){try{if('serviceWorker' in navigator)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch{}location.reload()}
+(async()=>{await open();await load();await ghLoad();await autoBackup();applyCan();$('#lc').textContent=LANG==='ar'?'FR':'AR';render();tr($('aside'));tr($('#toast'));autoSync();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
 let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#inst').hidden=false});
 </script>
 </body>
