@@ -37,3 +37,14 @@ Jours de repos hebdomadaires + jours fériés/vacances (saisie ou import Excel :
 
 ## Langue et PDF
 Bascule Français/Arabe (bouton en bas de la barre latérale). Le PDF est généré directement avec le logo (à choisir dans Données) ; il nécessite Internet la première fois pour charger les bibliothèques.
+
+## Synchronisation automatique
+Avec « Synchronisation automatique » cochée : à l’ouverture, au retour sur l’application, toutes les 3 minutes, et 15 s après chaque modification. Chaque appareil écrit son propre fichier `sauvegarde-AAAA-MM-JJ_<appareil>.json` (un par jour) et fusionne les fichiers des autres. Il faut configurer le token sur chaque téléphone.
+
+## Appel : matin / après-midi
+Le jour même, l’appel affiche seulement le matin avant la fin du matin (12:00 par défaut), seulement l’après-midi à partir de 13:00, et une pause entre les deux. Heures réglables dans Données et sauvegarde ; bouton « Tout afficher » pour tout voir. Les autres dates affichent toujours les deux sessions.
+
+## Cantine
+1. *Classes et élèves* : cochez 🍽 pour chaque élève inscrit à la cantine.
+2. *Données et sauvegarde → Réglages de la cantine* : activer l’onglet, jours de cantine, prix du repas (facultatif), absence automatique si absent le matin.
+3. Onglet *Cantine* : choisissez la date, un clic sur « Repas pris / Absent », récapitulatif mensuel (Excel / impression). Par défaut un élève inscrit est compté présent à la cantine les jours de cantine. Les réglages sont propres à chaque appareil ; l’inscription et les absences cantine sont synchronisées.
